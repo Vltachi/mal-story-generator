@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAL Story Generator — Share your anime journey</title>
+<meta name="description" content="Chrome extension that automatically generates Instagram stories when you complete an anime or manga on MyAnimeList." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold:    #facc15;
+    --amber:   #fbbf24;
+    --silver:  #e2e8f0;
+    --blue:    #2e51a2;
+    --dark:    #080c14;
+    --darker:  #04060d;
+    --card:    rgba(255,255,255,0.04);
+    --border:  rgba(255,255,255,0.08);
+    --text:    rgba(255,255,255,0.85);
+    --muted:   rgba(255,255,255,0.38);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--darker);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--gold);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: exclusion;
+  }
+  .cursor.big { width: 40px; height: 40px; }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: linear-gradient(to bottom, rgba(4,6,13,0.9), transparent);
+    backdrop-filter: blur(2px);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 2px; color: #fff;
+  }
+  .nav-logo-sq {
+    width: 32px; height: 32px; background: var(--blue); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; letter-spacing: -0.5px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-link {
+    font-size: 13px; color: var(--muted); text-decoration: none; letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: #fff; }
+  .nav-cta {
+    background: var(--gold); color: #000;
+    font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 20px; border-radius: 20px; text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(250,204,21,0.3); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 120px 24px 80px;
+    position: relative; overflow: hidden;
+  }
+
+  /* Glow de fundo */
+  .hero::after {
+    content: '';
+    position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(46,81,162,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 24px;
+    border: 1px solid rgba(46,81,162,0.3);
+    padding: 6px 16px; border-radius: 20px;
+    background: rgba(46,81,162,0.08);
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 12vw, 140px);
+    line-height: 0.92; letter-spacing: -1px;
+    text-align: center; color: #fff;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  .hero-title span { color: var(--gold); }
+
+  .hero-sub {
+    max-width: 520px; text-align: center;
+    font-size: 17px; line-height: 1.7; color: var(--muted);
+    margin-top: 28px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex; gap: 14px; margin-top: 40px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--gold); color: #000;
+    font-weight: 500; font-size: 14px; letter-spacing: 0.5px;
+    padding: 14px 32px; border-radius: 40px; text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(250,204,21,0.3); }
+  .btn-secondary {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    font-weight: 400; font-size: 14px; letter-spacing: 0.5px;
+    padding: 14px 32px; border-radius: 40px; text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+
+  /* ── CARD PREVIEW ── */
+  .hero-preview {
+    margin-top: 70px; position: relative;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+  .preview-glow {
+    position: absolute; inset: -40px;
+    background: radial-gradient(ellipse, rgba(250,204,21,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Card simulado */
+  .mock-card {
+    width: 200px; height: 356px; border-radius: 18px; overflow: hidden;
+    position: relative; background: #0a0f1a;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+    display: inline-block;
+  }
+  .mock-card + .mock-card {
+    margin-left: -40px; transform: rotate(4deg) translateY(16px);
+    filter: brightness(0.7);
+  }
+  .mock-cards { display: flex; align-items: flex-end; }
+
+  .mock-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    filter: blur(5px) brightness(0.4) saturate(1.3);
+    transform: scale(1.08);
+  }
+  .mock-cover {
+    position: absolute; left: 50%; top: 40px;
+    transform: translateX(-50%);
+    width: 148px; height: 210px; border-radius: 12px;
+    background-size: cover; background-position: center;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.8);
+  }
+  .mock-avatar {
+    position: absolute; left: 50%; top: 22px;
+    transform: translateX(-50%);
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #333; z-index: 2;
+    box-shadow: inset 1px 1px 3px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.8);
+    overflow: hidden;
+  }
+  .mock-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .mock-title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    top: 268px; font-family: 'Bebas Neue', sans-serif; font-size: 15px;
+    letter-spacing: 0.5px; color: #fff; padding: 0 10px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  }
+  .mock-rating {
+    position: absolute; left: 0; right: 0; text-align: center; top: 290px;
+    font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .mock-score { font-family: 'Bebas Neue', sans-serif; font-size: 18px; }
+  .mock-sep { width: 1px; height: 12px; background: rgba(255,255,255,0.2); }
+  .mock-eps { font-size: 11px; color: rgba(255,255,255,0.45); }
+  .mock-mal {
+    position: absolute; left: 0; right: 0; bottom: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .mock-mal-sq {
+    width: 14px; height: 14px; background: var(--blue); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 6px; font-weight: 900; color: #fff; font-family: 'DM Sans', sans-serif;
+  }
+  .mock-mal-txt { font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+
+  /* ── SECTION BASE ── */
+  section { padding: 100px 24px; position: relative; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 72px);
+    line-height: 1; color: #fff; margin-bottom: 20px;
+  }
+  .section-title span { color: var(--gold); }
+
+  /* ── HOW IT WORKS ── */
+  .steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2px; margin-top: 60px;
+    border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+  }
+  .step {
+    padding: 40px 32px; background: var(--card);
+    position: relative; transition: background 0.3s;
+  }
+  .step:hover { background: rgba(255,255,255,0.06); }
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px; color: rgba(255,255,255,0.05);
+    position: absolute; top: 16px; right: 20px; line-height: 1;
+  }
+  .step-icon {
+    font-size: 28px; margin-bottom: 16px; display: block;
+  }
+  .step-title {
+    font-size: 16px; font-weight: 500; color: #fff; margin-bottom: 8px;
+  }
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ── FEATURES ── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px; margin-top: 60px;
+  }
+  .feature-card {
+    padding: 32px; border-radius: 16px;
+    background: var(--card); border: 1px solid var(--border);
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .feature-card:hover { border-color: rgba(250,204,21,0.2); transform: translateY(-4px); }
+  .feature-icon { font-size: 24px; margin-bottom: 14px; }
+  .feature-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 8px; }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── RATING SHOWCASE ── */
+  .ratings-row {
+    display: flex; gap: 10px; margin-top: 50px; flex-wrap: wrap; justify-content: center;
+  }
+  .rating-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 18px; border-radius: 30px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    font-size: 14px; font-family: 'DM Mono', monospace;
+    transition: transform 0.2s;
+  }
+  .rating-pill:hover { transform: scale(1.05); }
+  .rating-star { font-size: 14px; }
+  .rating-score { font-weight: 500; }
+  .rating-label { font-size: 11px; color: var(--muted); }
+
+  /* ── INSTALL ── */
+  .install-box {
+    background: linear-gradient(135deg, rgba(46,81,162,0.15), rgba(250,204,21,0.05));
+    border: 1px solid rgba(46,81,162,0.3);
+    border-radius: 24px; padding: 64px 48px;
+    text-align: center; margin-top: 60px; position: relative; overflow: hidden;
+  }
+  .install-box::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(ellipse at center, rgba(46,81,162,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .install-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(32px, 5vw, 56px); color: #fff; margin-bottom: 12px;
+  }
+  .install-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+
+  .code-block {
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px;
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--silver); text-align: left; margin: 24px auto;
+    max-width: 560px; line-height: 1.8;
+  }
+  .code-block .comment { color: var(--muted); }
+  .code-block .cmd { color: var(--gold); }
+  .code-block .num { color: #86efac; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-logo { display: flex; align-items: center; gap: 8px; }
+  .footer-text { font-size: 12px; color: var(--muted); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-link { font-size: 12px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .footer-link:hover { color: #fff; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%; height: 1px; background: var(--border);
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    nav .nav-links { display: none; }
+    .install-box { padding: 40px 24px; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-sq">MAL</div>
+    Story Generator
+  </div>
+  <div class="nav-links" style="display:flex;gap:32px;align-items:center;">
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#install" class="nav-link">Install</a>
+  </div>
+  <a href="#install" class="nav-cta">Get Extension</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Chrome Extension · MyAnimeList × Instagram</div>
+  <h1 class="hero-title">
+    SHARE YOUR<br /><span>ANIME</span> JOURNEY
+  </h1>
+  <p class="hero-sub">
+    Automatically generate beautiful Instagram stories when you complete an anime or manga on MyAnimeList. One click, zero manual work.
+  </p>
+  <div class="hero-actions">
+    <a href="#install" class="btn-primary">
+      <span>⬇</span> Install Extension
+    </a>
+    <a href="https://github.com/Vltachi/mal-story-generator" class="btn-secondary" target="_blank">
+      <span>⭐</span> Star on GitHub
+    </a>
+  </div>
+
+  <div class="hero-preview">
+    <div class="preview-glow"></div>
+    <div class="mock-cards">
+      <!-- Card principal -->
+      <div class="mock-card" style="transform:rotate(-3deg) translateY(8px);filter:brightness(0.75);">
+        <div class="mock-bg" style="background:linear-gradient(135deg,#1a0a2e,#2d1b69);"></div>
+        <div class="mock-cover" style="background:linear-gradient(160deg,#2d1b69,#4c1d95,#7c3aed);"></div>
+        <div class="mock-avatar" style="background:#7c3aed;"></div>
+        <div class="mock-title">Violet Evergarden</div>
+        <div class="mock-rating">
+          <span class="mock-score" style="color:#94a3b8;">★ 8</span>
+          <span class="mock-sep"></span>
+          <span class="mock-eps">13 eps</span>
+        </div>
+        <div class="mock-mal"><div class="mock-mal-sq">MAL</div><span class="mock-mal-txt">MyAnimeList</span></div>
+      </div>
+      <!-- Card destaque -->
+      <div class="mock-card" style="z-index:2;transform:rotate(0deg);filter:brightness(1);">
+        <div class="mock-bg" style="background:linear-gradient(135deg,#1a1200,#2d2000);"></div>
+        <div class="mock-cover" style="background:linear-gradient(160deg,#78350f,#b45309,#d97706);"></div>
+        <div class="mock-avatar" style="background:#d97706;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">V</div>
+        <div class="mock-title">Fullmetal Alchemist</div>
+        <div class="mock-rating">
+          <span class="mock-score" style="color:#facc15;">★ 10</span>
+          <span class="mock-sep"></span>
+          <span class="mock-eps">64 eps</span>
+        </div>
+        <div class="mock-mal"><div class="mock-mal-sq">MAL</div><span class="mock-mal-txt">MyAnimeList</span></div>
+      </div>
+      <!-- Card direita -->
+      <div class="mock-card" style="transform:rotate(3deg) translateY(8px);filter:brightness(0.75);">
+        <div class="mock-bg" style="background:linear-gradient(135deg,#0a1a2e,#0c2d4a);"></div>
+        <div class="mock-cover" style="background:linear-gradient(160deg,#0c2d4a,#1e4d7a,#2e7cc2);"></div>
+        <div class="mock-avatar" style="background:#2e7cc2;"></div>
+        <div class="mock-title">Vinland Saga</div>
+        <div class="mock-rating">
+          <span class="mock-score" style="color:#fbbf24;">★ 9</span>
+          <span class="mock-sep"></span>
+          <span class="mock-eps">24 eps</span>
+        </div>
+        <div class="mock-mal"><div class="mock-mal-sq">MAL</div><span class="mock-mal-txt">MyAnimeList</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">// how it works</div>
+      <h2 class="section-title">THREE STEPS,<br /><span>ZERO EFFORT</span></h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <span class="step-num">01</span>
+        <span class="step-icon">🔑</span>
+        <div class="step-title">Connect your MAL account</div>
+        <div class="step-desc">Login once with your MyAnimeList account. Your profile photo, ratings, and library are loaded automatically.</div>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <span class="step-icon">✅</span>
+        <div class="step-title">Mark as Completed</div>
+        <div class="step-desc">Finish an anime or manga on MAL as usual. A banner appears instantly offering to generate your story.</div>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <span class="step-icon">📸</span>
+        <div class="step-title">Download & Share</div>
+        <div class="step-desc">Your story is generated at 1080×1920px, ready to post on Instagram Stories. No editing required.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">// features</div>
+      <h2 class="section-title">EVERYTHING<br /><span>AUTOMATIC</span></h2>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Dynamic background</div>
+        <div class="feature-desc">The cover art becomes a blurred, color-rich background unique to each anime or manga.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⭐</div>
+        <div class="feature-title">Metal rating palette</div>
+        <div class="feature-desc">Score colors range from dark bordeaux at 1 all the way to brilliant gold at 10 — distinct at every step.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👤</div>
+        <div class="feature-title">Your profile, auto-loaded</div>
+        <div class="feature-desc">Your MAL profile photo appears on the card automatically. No manual uploads needed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🖼️</div>
+        <div class="feature-title">Pixel-perfect export</div>
+        <div class="feature-desc">Exported at exactly 1080×1920px using Canvas API — what you see in preview is what you get.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Instant detection</div>
+        <div class="feature-desc">A banner appears the moment you mark something as Completed. No need to open the extension manually.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Private & secure</div>
+        <div class="feature-desc">OAuth PKCE authentication. Your token stays on your machine. No data is sent to any external server.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RATING SHOWCASE -->
+<section>
+  <div class="container" style="text-align:center;">
+    <div class="reveal">
+      <div class="section-label">// rating colors</div>
+      <h2 class="section-title">FROM <span>APPALLING</span><br />TO MASTERPIECE</h2>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px;">Each score gets a unique metal-inspired color</p>
+    </div>
+    <div class="ratings-row reveal">
+      <div class="rating-pill"><span class="rating-star" style="color:#facc15;">★</span><span class="rating-score" style="color:#facc15;">10</span><span class="rating-label">Masterpiece</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#fbbf24;">★</span><span class="rating-score" style="color:#fbbf24;">9</span><span class="rating-label">Great</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#e2e8f0;">★</span><span class="rating-score" style="color:#e2e8f0;">8</span><span class="rating-label">Very Good</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#94a3b8;">★</span><span class="rating-score" style="color:#94a3b8;">7</span><span class="rating-label">Good</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#cd7f32;">★</span><span class="rating-score" style="color:#cd7f32;">6</span><span class="rating-label">Fine</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#a05c1e;">★</span><span class="rating-score" style="color:#a05c1e;">5</span><span class="rating-label">Average</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#b45309;">★</span><span class="rating-score" style="color:#b45309;">4</span><span class="rating-label">Bad</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#92400e;">★</span><span class="rating-score" style="color:#92400e;">3</span><span class="rating-label">Very Bad</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#7f1d1d;">★</span><span class="rating-score" style="color:#7f1d1d;">2</span><span class="rating-label">Horrible</span></div>
+      <div class="rating-pill"><span class="rating-star" style="color:#450a0a;">★</span><span class="rating-score" style="color:#450a0a;">1</span><span class="rating-label">Appalling</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="container">
+    <div class="install-box reveal">
+      <h2 class="install-title">INSTALL IN 30 SECONDS</h2>
+      <p class="install-sub">Load the extension in developer mode — no Chrome Web Store needed.</p>
+
+      <div class="code-block">
+        <div><span class="comment"># 1. Download and unzip the extension</span></div>
+        <div><span class="cmd">↓</span> Download <span class="num">mal-story-extension.zip</span> below</div>
+        <div style="margin-top:8px;"><span class="comment"># 2. Open Chrome / Brave / Edge</span></div>
+        <div><span class="cmd">→</span> Go to <span class="num">chrome://extensions</span></div>
+        <div><span class="cmd">→</span> Enable <span class="num">Developer Mode</span></div>
+        <div><span class="cmd">→</span> Click <span class="num">Load unpacked</span> → select the folder</div>
+        <div style="margin-top:8px;"><span class="comment"># 3. Done — visit any MAL anime page!</span></div>
+      </div>
+
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+        <a href="https://github.com/Vltachi/mal-story-generator/releases/latest/download/mal-story-extension.zip"
+           class="btn-primary">
+          <span>⬇</span> Download Extension (.zip)
+        </a>
+        <a href="https://github.com/Vltachi/mal-story-generator" class="btn-secondary" target="_blank">
+          <span>⭐</span> View on GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="nav-logo-sq">MAL</div>
+    <span style="font-size:13px;color:var(--muted);">Story Generator</span>
+  </div>
+  <div class="footer-text">Open source · Not affiliated with MyAnimeList</div>
+  <div class="footer-links">
+    <a href="https://github.com/Vltachi/mal-story-generator" class="footer-link" target="_blank">GitHub</a>
+    <a href="https://myanimelist.net" class="footer-link" target="_blank">MyAnimeList</a>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

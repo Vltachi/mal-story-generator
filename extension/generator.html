@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAL Story Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1117; color: #eee;
+    font-family: 'Montserrat', sans-serif;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 32px 16px 48px; gap: 28px;
+  }
+  .header { display: flex; align-items: center; gap: 12px; }
+  .mal-sq {
+    width: 36px; height: 36px; background: #2e51a2; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; color: #fff;
+  }
+  h1 { font-weight: 700; font-size: 18px; letter-spacing: 1px; color: #fff; opacity: 0.8; }
+
+  .auto-banner {
+    display: none; background: rgba(46,81,162,0.12);
+    border: 1px solid rgba(46,81,162,0.35); border-radius: 10px;
+    padding: 10px 18px; font-size: 12px; color: rgba(255,255,255,0.6);
+    text-align: center; max-width: 700px; width: 100%;
+  }
+  .auto-banner strong { color: #7da4f0; }
+
+  .layout {
+    display: flex; gap: 48px; align-items: flex-start;
+    flex-wrap: wrap; justify-content: center;
+    width: 100%; max-width: 960px;
+  }
+  .controls {
+    display: flex; flex-direction: column; gap: 13px;
+    flex: 1; min-width: 260px; max-width: 320px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+  .field input[type=text], .field input[type=file] {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; color: #fff; font-family: 'Montserrat', sans-serif;
+    font-size: 13px; padding: 8px 12px; outline: none; width: 100%;
+  }
+  .field input[type=file] { padding: 6px 10px; cursor: pointer; }
+  .score-row { display: flex; align-items: center; gap: 12px; }
+  .score-row input[type=range] { flex: 1; accent-color: #facc15; }
+  .score-val { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 900; color: #facc15; min-width: 28px; text-align: right; }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 3px 0; }
+  .btn-dl {
+    background: #2e51a2; color: #fff; font-family: 'Montserrat', sans-serif;
+    font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; width: 100%; margin-top: 4px;
+  }
+  .btn-dl:hover { background: #3a65c8; }
+  .btn-dl:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hint { font-size: 11px; color: rgba(255,255,255,0.28); text-align: center; line-height: 1.6; }
+  .preview-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .preview-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+  #preview-canvas { border-radius: 20px; display: block; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+  .url-row { display: flex; gap: 6px; }
+  .url-row input { flex: 1; }
+  .url-row button {
+    padding: 8px 11px; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    color: #fff; font-size: 12px; cursor: pointer;
+  }
+  .url-row button:hover { background: rgba(255,255,255,0.13); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="mal-sq">MAL</div>
+  <h1>Story Generator</h1>
+</div>
+
+<div class="auto-banner" id="auto-banner">
+  ✨ Dados carregados automaticamente do <strong>MyAnimeList</strong>. Edite se precisar.
+</div>
+
+<div class="layout">
+  <div class="controls">
+    <div class="field">
+      <label>Título</label>
+      <input type="text" id="inp-title" value="" />
+    </div>
+    <div class="field">
+      <label>Episódios / Capítulos</label>
+      <input type="text" id="inp-eps" value="" />
+    </div>
+    <div class="field">
+      <label>Nota — <span id="score-display" style="color:#facc15;font-weight:700;">9</span></label>
+      <div class="score-row">
+        <input type="range" min="1" max="10" step="0.5" value="9" id="inp-score" />
+        <div class="score-val" id="score-val">9</div>
+      </div>
+    </div>
+    <hr class="divider" />
+    <div class="field">
+      <label>Capa — URL (carregada do MAL)</label>
+      <div class="url-row">
+        <input type="text" id="inp-cover-url" placeholder="https://..." />
+        <button onclick="loadImgUrl(document.getElementById('inp-cover-url').value,'cover')">OK</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Capa — upload manual</label>
+      <input type="file" id="inp-cover" accept="image/*" onchange="loadImgFile(this,'cover')" />
+    </div>
+    <div class="field">
+      <label>Foto de perfil — upload</label>
+      <input type="file" id="inp-avatar" accept="image/*" onchange="loadImgFile(this,'avatar')" />
+    </div>
+    <div class="field">
+      <label>Logo MAL — upload</label>
+      <input type="file" id="inp-mal" accept="image/*" onchange="loadImgFile(this,'mal')" />
+    </div>
+    <hr class="divider" />
+    <button class="btn-dl" id="btn-dl" onclick="download()">⬇ Baixar PNG (1080 × 1920)</button>
+    <p class="hint">O que você vê é exatamente o que será exportado.</p>
+  </div>
+
+  <div class="preview-wrap">
+    <div class="preview-label">Prévia — 270 × 480 px</div>
+    <canvas id="preview-canvas" width="270" height="480"></canvas>
+    <p class="hint">Exportado em 4× → 1080 × 1920 px</p>
+  </div>
+</div>
+
+<script src="generator.js"></script>
+</body>
+</html>
