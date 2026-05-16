@@ -27,6 +27,8 @@ if (typeof chrome !== 'undefined' && chrome.storage) {
       }
       document.getElementById('inp-title').value = state.title;
       document.getElementById('inp-eps').value   = state.eps;
+      const src = d.source === 'anilist' ? 'AniList' : 'MyAnimeList';
+      document.getElementById('auto-banner').innerHTML = '✨ Dados carregados automaticamente do <strong>' + src + '</strong>. Edite se precisar.';
       document.getElementById('auto-banner').style.display = 'block';
 
       if (d.coverUrl) {
@@ -55,18 +57,18 @@ if (typeof chrome !== 'undefined' && chrome.storage) {
 }
 
 function statusIcon(status) {
-  if (status === 'dropped')    return '✕';
-  if (status === 'on_hold')    return '⏸';
-  if (status === 'watching')   return '▶';
-  if (status === 'plan_to_watch') return '📋';
+  if (status === 'dropped')              return '✕';
+  if (status === 'on_hold')              return '⏸';
+  if (status === 'watching' || status === 'reading') return '▶';
+  if (status === 'plan_to_watch')        return '📋';
   return '★'; // completed
 }
 
 function statusColor(status, score) {
-  if (status === 'dropped')  return '#ef4444'; // vermelho
-  if (status === 'on_hold')  return '#e2e8f0'; // cinza claro
-  if (status === 'watching') return '#4ade80'; // verde
-  return scoreColor(score);  // completed — usa paleta de metais
+  if (status === 'dropped')                          return '#ef4444';
+  if (status === 'on_hold')                          return '#e2e8f0';
+  if (status === 'watching' || status === 'reading') return '#4ade80';
+  return scoreColor(score);
 }
 
 function scoreColor(s) {
@@ -103,7 +105,23 @@ function loadImgUrl(url, key) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => { state[key]=img; render(); };
-  img.onerror = () => { const img2=new Image(); img2.onload=()=>{state[key]=img2;render();}; img2.src=url; };
+  img.onerror = () => {
+    // Tenta via fetch + blob para evitar tainted canvas
+    fetch(url)
+      .then(r => r.blob())
+      .then(blob => {
+        const burl = URL.createObjectURL(blob);
+        const img2 = new Image();
+        img2.onload = () => { state[key]=img2; render(); };
+        img2.src = burl;
+      })
+      .catch(() => {
+        // Último recurso sem crossOrigin — canvas ficará tainted
+        const img3 = new Image();
+        img3.onload = () => { state[key]=img3; render(); };
+        img3.src = url;
+      });
+  };
   img.src = url;
 }
 
@@ -188,7 +206,7 @@ function drawCard(canvas) {
 
   // nota + eps — layout varia por status
   const mY=403*sc, sC=statusColor(state.status, state.score);
-  const isCompleted = state.status === 'completed';
+  const isCompleted = state.status === 'completed' || (!state.status);
 
   ctx.save(); ctx.textBaseline='middle';
   ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=6*sc;
@@ -216,7 +234,7 @@ function drawCard(canvas) {
     }
   } else {
     // ✕ Dropped · 6 | 5 eps   ou   ▶ Watching | 12/24 eps
-    const statusLabels = { watching:'Watching', on_hold:'On Hold', dropped:'Dropped' };
+    const statusLabels = { watching:'Watching', reading:'Reading', on_hold:'On Hold', dropped:'Dropped' };
     const label  = statusLabels[state.status] || state.status;
     const labelW = mTxt(ctx, label, `500 ${13*sc}px Montserrat, sans-serif`);
     const dotTxt = state.score > 0 ? ` · ${state.score}` : '';
@@ -270,18 +288,37 @@ function render() {
 async function download() {
   const btn=document.getElementById('btn-dl');
   btn.disabled=true; btn.textContent='Gerando…';
-  await document.fonts.ready;
-  const exp=document.createElement('canvas');
-  exp.width=1080; exp.height=1920; drawCard(exp);
-  exp.toBlob(blob=>{
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=(state.title||'anime').replace(/[^\w\s\-]/g,'').trim().replace(/\s+/g,'-')+'_mal_story.png';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),5000);
+  try {
+    await document.fonts.ready;
+    const exp=document.createElement('canvas');
+    exp.width=1080; exp.height=1920;
+    drawCard(exp);
+    exp.toBlob(function(blob) {
+      if (!blob) { btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)'; return; }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=(state.title||'anime').replace(/[^\w\s\-]/g,'').trim().replace(/\s+/g,'-')+'_mal_story.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);},5000);
+      btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)';
+    },'image/png');
+  } catch(e) {
+    console.error('Download error:', e);
     btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)';
-  },'image/png');
+    alert('Erro ao gerar: ' + e.message);
+  }
 }
 
 render();
+
+// Listeners para botões sem onclick inline
+document.addEventListener('DOMContentLoaded', function() {
+  var btnDl = document.getElementById('btn-dl');
+  if (btnDl) btnDl.addEventListener('click', download);
+
+  var btnLoadCover = document.getElementById('btn-load-cover');
+  if (btnLoadCover) btnLoadCover.addEventListener('click', function() {
+    loadImgUrl(document.getElementById('inp-cover-url').value, 'cover');
+  });
+});

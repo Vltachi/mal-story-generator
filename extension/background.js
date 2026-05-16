@@ -98,15 +98,25 @@ async function fetchMalWork(malId, type, token) {
 async function buildMalStoryData(data, type) {
   const score  = data.my_list_status?.score  || 0;
   const status = data.my_list_status?.status || 'completed';
+  const isCompleted = status === 'completed';
+  const isActive    = status === 'watching' || status === 'reading';
+  const isHold      = status === 'on_hold';
+  const isDropped   = status === 'dropped';
   let episodes = '';
   if (type === 'anime') {
-    const total = data.num_episodes || 0;
-    const seen  = data.my_list_status?.num_episodes_watched || 0;
-    episodes = (status === 'watching' && seen > 0 && total > 0) ? `${seen}/${total} eps` : total > 0 ? `${total} eps` : '';
+    const total  = data.num_episodes || 0;
+    const seen   = data.my_list_status?.num_episodes_watched || 0;
+    if (isCompleted)                            episodes = total > 0 ? `${total} ep.` : '';
+    else if (isActive && seen > 0)              episodes = total > 0 ? `ep. ${seen}/${total}` : `ep. ${seen}/?`;
+    else if ((isHold || isDropped) && seen > 0) episodes = total > 0 ? `ep. ${seen}/${total}` : `ep. ${seen}/?`;
+    else if (total > 0)                         episodes = `${total} ep.`;
   } else {
-    const total = data.num_chapters || 0;
-    const read  = data.my_list_status?.num_chapters_read || 0;
-    episodes = (status === 'watching' && read > 0 && total > 0) ? `${read}/${total} caps` : total > 0 ? `${total} caps` : '';
+    const total  = data.num_chapters || 0;
+    const read   = data.my_list_status?.num_chapters_read || 0;
+    if (isCompleted)                            episodes = total > 0 ? `${total} ch.` : '';
+    else if (isActive && read > 0)              episodes = total > 0 ? `ch. ${read}/${total}` : `ch. ${read}/?`;
+    else if ((isHold || isDropped) && read > 0) episodes = total > 0 ? `ch. ${read}/${total}` : `ch. ${read}/?`;
+    else if (total > 0)                         episodes = `${total} ch.`;
   }
   const stored    = await chrome.storage.local.get('malUserProfile');
   const avatarUrl = stored.malUserProfile?.picture || '';
@@ -238,10 +248,10 @@ async function buildAniListStoryData(data, type) {
   let episodes = '';
   if (type === 'anime') {
     const total = data.episodes || 0;
-    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} eps` : total > 0 ? `${total} eps` : '';
+    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} eps` : total > 0 ? `${total} ep.` : '';
   } else {
     const total = data.chapters || 0;
-    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} caps` : total > 0 ? `${total} caps` : '';
+    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} caps` : total > 0 ? `${total} ch.` : '';
   }
 
   const stored    = await chrome.storage.local.get('alUserProfile');

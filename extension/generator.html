@@ -105,7 +105,7 @@
       <label>Capa — URL (carregada do MAL)</label>
       <div class="url-row">
         <input type="text" id="inp-cover-url" placeholder="https://..." />
-        <button onclick="loadImgUrl(document.getElementById('inp-cover-url').value,'cover')">OK</button>
+        <button id="btn-load-cover">OK</button>
       </div>
     </div>
     <div class="field">
@@ -121,7 +121,7 @@
       <input type="file" id="inp-mal" accept="image/*" onchange="loadImgFile(this,'mal')" />
     </div>
     <hr class="divider" />
-    <button class="btn-dl" id="btn-dl" onclick="download()">⬇ Baixar PNG (1080 × 1920)</button>
+    <button class="btn-dl" id="btn-dl" >⬇ Baixar PNG (1080 × 1920)</button>
     <p class="hint">O que você vê é exatamente o que será exportado.</p>
   </div>
 

@@ -4,15 +4,15 @@
   "version": "3.0.0",
   "description": "Generate Instagram stories when you complete anime or manga on MyAnimeList or AniList.",
   "icons": {
-    "16":  "icons/icon16.png",
-    "48":  "icons/icon48.png",
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16":  "icons/icon16.png",
-      "48":  "icons/icon48.png",
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
     "default_title": "Anime Story Generator"
@@ -22,29 +22,54 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://myanimelist.net/*"],
-      "js": ["content-mal.js"],
-      "css": ["content.css"],
+      "matches": [
+        "*://myanimelist.net/*"
+      ],
+      "js": [
+        "content-mal.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://anilist.co/*"],
-      "js": ["content-anilist.js"],
-      "css": ["content.css"],
+      "matches": [
+        "*://anilist.co/*"
+      ],
+      "js": [
+        "content-anilist.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["storage", "activeTab", "identity", "tabs"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "identity",
+    "tabs"
+  ],
   "host_permissions": [
     "*://myanimelist.net/*",
     "*://api.myanimelist.net/*",
     "*://anilist.co/*",
-    "*://graphql.anilist.co/*"
+    "*://graphql.anilist.co/*",
+    "*://s4.anilist.co/*",
+    "*://s1.anilist.co/*",
+    "*://cdn.anilist.co/*",
+    "*://img.anilist.co/*"
   ],
   "web_accessible_resources": [
     {
-      "resources": ["generator.html"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "generator.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
