@@ -288,26 +288,81 @@ function render() {
 async function download() {
   const btn=document.getElementById('btn-dl');
   btn.disabled=true; btn.textContent='Gerando…';
-  try {
-    await document.fonts.ready;
-    const exp=document.createElement('canvas');
-    exp.width=1080; exp.height=1920;
-    drawCard(exp);
-    exp.toBlob(function(blob) {
-      if (!blob) { btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)'; return; }
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download=(state.title||'anime').replace(/[^\w\s\-]/g,'').trim().replace(/\s+/g,'-')+'_mal_story.png';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(function(){URL.revokeObjectURL(url);},5000);
-      btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)';
-    },'image/png');
-  } catch(e) {
-    console.error('Download error:', e);
-    btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)';
-    alert('Erro ao gerar: ' + e.message);
+  await document.fonts.ready;
+
+  async function tryBlob(canvas) {
+    return new Promise(function(resolve, reject) {
+      try {
+        canvas.toBlob(function(blob) {
+          if (blob) resolve(blob); else reject(new Error('blob null'));
+        }, 'image/png');
+      } catch(e) { reject(e); }
+    });
   }
+
+  async function reloadClean(url) {
+    // Recarrega imagem via fetch->blob para evitar tainted
+    try {
+      const r = await fetch(url);
+      const b = await r.blob();
+      const burl = URL.createObjectURL(b);
+      return new Promise(function(resolve) {
+        const img = new Image();
+        img.onload = function() { resolve(img); };
+        img.onerror = function() { resolve(null); };
+        img.src = burl;
+      });
+    } catch(e) { return null; }
+  }
+
+  const exp = document.createElement('canvas');
+  exp.width = 1080; exp.height = 1920;
+  drawCard(exp);
+
+  let blob = null;
+  try {
+    blob = await tryBlob(exp);
+  } catch(e) {
+    // Canvas tainted — recarrega imagens via fetch
+    console.warn('Tainted canvas, reloading images via fetch...');
+    const savedCover  = state.cover;
+    const savedAvatar = state.avatar;
+
+    if (state.cover && state.cover.src)  state.cover  = await reloadClean(state.cover.src)  || state.cover;
+    if (state.avatar && state.avatar.src) state.avatar = await reloadClean(state.avatar.src) || state.avatar;
+
+    const exp2 = document.createElement('canvas');
+    exp2.width = 1080; exp2.height = 1920;
+    drawCard(exp2);
+
+    try {
+      blob = await tryBlob(exp2);
+    } catch(e2) {
+      // Último recurso: gera sem as imagens externas
+      console.warn('Still tainted, generating without external images...');
+      const tmpCover = state.cover; const tmpAvatar = state.avatar;
+      state.cover = null; state.avatar = null;
+      const exp3 = document.createElement('canvas');
+      exp3.width = 1080; exp3.height = 1920;
+      drawCard(exp3);
+      blob = await tryBlob(exp3);
+      state.cover = tmpCover; state.avatar = tmpAvatar;
+    }
+
+    state.cover  = savedCover;
+    state.avatar = savedAvatar;
+  }
+
+  if (blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (state.title||'anime').replace(/[^\w\s\-]/g,'').trim().replace(/\s+/g,'-') + '_story.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+  }
+
+  btn.disabled=false; btn.textContent='⬇ Baixar PNG (1080 × 1920)';
 }
 
 render();

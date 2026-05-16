@@ -16,6 +16,27 @@ const AL_REDIRECT_URI = chrome.identity.getRedirectURL('oauth-callback');
 const AL_API          = 'https://graphql.anilist.co';
 
 // ════════════════════════════════
+// UTILS
+// ════════════════════════════════
+async function urlToBase64(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) {
+    console.error('urlToBase64 error:', e);
+    return null;
+  }
+}
+
+// ════════════════════════════════
 // MAL — helpers
 // ════════════════════════════════
 function generateVerifier() {
@@ -120,7 +141,21 @@ async function buildMalStoryData(data, type) {
   }
   const stored    = await chrome.storage.local.get('malUserProfile');
   const avatarUrl = stored.malUserProfile?.picture || '';
-  return { title: data.title, coverUrl: data.main_picture?.large || data.main_picture?.medium || '', episodes, score: score > 0 ? String(score) : '', avatarUrl, status, type, source: 'mal', scoreMax: 10 };
+  const rawCoverUrl = data.main_picture?.large || data.main_picture?.medium || '';
+  const rawAvatarUrl = avatarUrl;
+  
+  // Converte para base64 para evitar tainted canvas
+  const coverBase64  = rawCoverUrl  ? await urlToBase64(rawCoverUrl)  : null;
+  const avatarBase64 = rawAvatarUrl ? await urlToBase64(rawAvatarUrl) : null;
+
+  return { 
+    title: data.title, 
+    coverUrl: coverBase64 || rawCoverUrl, 
+    episodes, 
+    score: score > 0 ? String(score) : '', 
+    avatarUrl: avatarBase64 || rawAvatarUrl, 
+    status, type, source: 'mal', scoreMax: 10 
+  };
 }
 
 // ════════════════════════════════
@@ -260,12 +295,19 @@ async function buildAniListStoryData(data, type) {
   // Score AniList é 0-100 → converte para exibição
   const displayScore = score > 0 ? (score / 10).toFixed(1).replace('.0','') : '';
 
+  const rawCoverUrl2  = data.coverImage?.extraLarge || data.coverImage?.large || '';
+  const rawAvatarUrl2 = avatarUrl;
+
+  // Converte para base64 para evitar tainted canvas
+  const coverBase64_2  = rawCoverUrl2  ? await urlToBase64(rawCoverUrl2)  : null;
+  const avatarBase64_2 = rawAvatarUrl2 ? await urlToBase64(rawAvatarUrl2) : null;
+
   return {
     title:    data.title?.userPreferred || '',
-    coverUrl: data.coverImage?.extraLarge || data.coverImage?.large || '',
+    coverUrl: coverBase64_2 || rawCoverUrl2,
     episodes,
     score:    displayScore,
-    avatarUrl,
+    avatarUrl: avatarBase64_2 || rawAvatarUrl2,
     status:   mappedStatus,
     type,
     source:   'anilist',
