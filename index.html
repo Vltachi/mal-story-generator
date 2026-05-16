@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Anime Story Generator — Share your anime journey</title>
+<title>Anime <span data-lang="en">Story Generator</span><span data-lang="pt">Story Generator</span> — Share your anime journey</title>
 <meta name="description" content="Chrome extension that automatically generates Instagram stories when you complete an anime or manga on MyAnimeList or AniList." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
@@ -168,9 +168,20 @@
     .install-box { padding: 36px 20px; }
     footer { flex-direction: column; align-items: flex-start; padding: 28px 20px; }
   }
+
+  .lang-switcher { display:flex; gap:4px; align-items:center; }
+  .lang-btn { background:none; border:1px solid var(--border); color:var(--muted); font-size:11px; font-family:'DM Sans',sans-serif; padding:4px 10px; border-radius:12px; cursor:pointer; transition:all 0.2s; }
+  .lang-btn.active { background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2); }
+  .lang-btn:hover { color:#fff; }
+  [data-lang] { display:none; }
+  .lang-en [data-lang="en"] { display:inherit; }
+  .lang-pt [data-lang="pt"] { display:inherit; }
+  span[data-lang], div[data-lang], a[data-lang], li[data-lang] { display:inline; }
+  .lang-en span[data-lang="pt"], .lang-en div[data-lang="pt"] { display:none; }
+  .lang-pt span[data-lang="en"], .lang-pt div[data-lang="en"] { display:none; }
 </style>
 </head>
-<body>
+<body class="lang-en">
 
 <nav>
   <a href="#" class="nav-logo">
@@ -178,21 +189,25 @@
     Anime Story Generator
   </a>
   <div class="nav-links">
-    <a href="#how" class="nav-link">How it works</a>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#platforms" class="nav-link">Platforms</a>
-    <a href="#install" class="nav-link">Install</a>
+    <a href="#how" class="nav-link"><span data-lang="en">How it works</span><span data-lang="pt">Como funciona</span></a>
+    <a href="#features" class="nav-link"><span data-lang="en">Features</span><span data-lang="pt">Funcionalidades</span></a>
+    <a href="#platforms" class="nav-link"><span data-lang="en">Platforms</span><span data-lang="pt">Plataformas</span></a>
+    <a href="#install" class="nav-link"><span data-lang="en">Install</span><span data-lang="pt">Instalar</span></a>
   </div>
-  <a href="#install" class="nav-cta">Get Extension</a>
+  <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('pt')">PT</button>
+    </div>
+    <a href="#install" class="nav-cta"><span data-lang="en">Get Extension</span><span data-lang="pt">Baixar</span></a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="eyebrow">Chrome Extension · MyAnimeList & AniList × Instagram</div>
+  <div class="eyebrow"><span data-lang="en">Chrome Extension · MyAnimeList & AniList × Instagram</span><span data-lang="pt">Extensão Chrome · MyAnimeList & AniList × Instagram</span></div>
   <h1 class="hero-title">
-    SHARE YOUR<br/><span class="gold">ANIME</span> <span class="al">JOURNEY</span>
+    <span data-lang="en">SHARE YOUR<br/><span class="gold">ANIME</span> <span class="al">JOURNEY</span></span><span data-lang="pt">COMPARTILHE SUA<br/><span class="gold">JORNADA</span> <span class="al">ANIME</span></span>
   </h1>
-  <p class="hero-sub">Automatically generate beautiful Instagram stories when you update your anime or manga status on MyAnimeList or AniList. Zero manual work.</p>
+  <p class="hero-sub"><span data-lang="en">Automatically generate beautiful Instagram stories when you update your anime or manga status on MyAnimeList or AniList. Zero manual work.</span><span data-lang="pt">Gere stories incríveis para o Instagram automaticamente quando você atualiza seu status no MyAnimeList ou AniList. Zero trabalho manual.</span></p>
 
   <div class="platforms">
     <div class="platform-badge"><div class="platform-dot" style="background:#2e51a2;"></div> MyAnimeList</div>
@@ -256,27 +271,27 @@
 <section id="how">
   <div class="container">
     <div class="reveal">
-      <div class="section-label">// how it works</div>
-      <h2 class="section-title">THREE STEPS,<br/><span class="gold">ZERO EFFORT</span></h2>
+      <div class="section-label"><span data-lang="en">// how it works</span><span data-lang="pt">// como funciona</span></div>
+      <h2 class="section-title"><span data-lang="en">THREE STEPS,<br/><span class="gold">ZERO EFFORT</span></span><span data-lang="pt">TRÊS PASSOS,<br/><span class="gold">ZERO ESFORÇO</span></span></h2>
     </div>
     <div class="steps reveal">
       <div class="step">
         <span class="step-num">01</span>
         <div class="step-icon">🔑</div>
-        <div class="step-title">Connect your accounts</div>
-        <div class="step-desc">Login with MAL and/or AniList. Your profile photo, scores and library sync automatically.</div>
+        <div class="step-title"><span data-lang="en">Connect your accounts</span><span data-lang="pt">Conecte suas contas</span></div>
+        <div class="step-desc"><span data-lang="en">Login with MAL and/or AniList. Your profile photo, scores and library sync automatically.</span><span data-lang="pt">Entre com MAL e/ou AniList. Sua foto de perfil, notas e biblioteca sincronizam automaticamente.</span></div>
       </div>
       <div class="step">
         <span class="step-num">02</span>
         <div class="step-icon">📋</div>
-        <div class="step-title">Update any status</div>
-        <div class="step-desc">Change to Completed, Watching, On Hold or Dropped. A banner appears instantly offering to generate your story.</div>
+        <div class="step-title"><span data-lang="en">Update any status</span><span data-lang="pt">Atualize qualquer status</span></div>
+        <div class="step-desc"><span data-lang="en">Change to Completed, Watching, On Hold or Dropped. A banner appears instantly offering to generate your story.</span><span data-lang="pt">Mude para Completo, Assistindo, Em Pausa ou Abandonado. Um banner aparece instantaneamente oferecendo gerar seu story.</span></div>
       </div>
       <div class="step">
         <span class="step-num">03</span>
         <div class="step-icon">📸</div>
-        <div class="step-title">Download & Share</div>
-        <div class="step-desc">Your story is generated at 1080×1920px, ready to post on Instagram Stories. No editing required.</div>
+        <div class="step-title"><span data-lang="en">Download & Share</span><span data-lang="pt">Baixe e Compartilhe</span></div>
+        <div class="step-desc"><span data-lang="en">Your story is generated at 1080×1920px, ready to post on Instagram Stories. No editing required.</span><span data-lang="pt">Seu story é gerado em 1080×1920px, pronto para postar no Instagram Stories. Sem edição necessária.</span></div>
       </div>
     </div>
   </div>
@@ -288,49 +303,49 @@
 <section id="features">
   <div class="container">
     <div class="reveal">
-      <div class="section-label">// features</div>
-      <h2 class="section-title">EVERYTHING<br/><span class="gold">AUTOMATIC</span></h2>
+      <div class="section-label"><span data-lang="en">// features</span><span data-lang="pt">// funcionalidades</span></div>
+      <h2 class="section-title"><span data-lang="en">EVERYTHING<br/><span class="gold">AUTOMATIC</span></span><span data-lang="pt">TUDO<br/><span class="gold">AUTOMÁTICO</span></span></h2>
     </div>
     <div class="features-grid reveal">
       <div class="feat">
         <div class="feat-icon">🎨</div>
-        <div class="feat-title">Dynamic background</div>
-        <div class="feat-desc">The cover art becomes a blurred, color-rich background unique to each title.</div>
+        <div class="feat-title"><span data-lang="en">Dynamic background</span><span data-lang="pt">Fundo dinâmico</span></div>
+        <div class="feat-desc"><span data-lang="en">The cover art becomes a blurred, color-rich background unique to each title.</span><span data-lang="pt">A capa vira um fundo desfocado e colorido único para cada título.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">🏅</div>
-        <div class="feat-title">Metal rating palette</div>
-        <div class="feat-desc">Score colors inspired by metals — from dark bordeaux at 1 to brilliant gold at 10.</div>
+        <div class="feat-title"><span data-lang="en">Metal rating palette</span><span data-lang="pt">Paleta de notas metálica</span></div>
+        <div class="feat-desc"><span data-lang="en">Score colors inspired by metals — from dark bordeaux at 1 to brilliant gold at 10.</span><span data-lang="pt">Cores de nota inspiradas em metais — do bordô escuro no 1 ao ouro brilhante no 10.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">👤</div>
-        <div class="feat-title">Profile photo auto-loaded</div>
-        <div class="feat-desc">Your MAL or AniList avatar appears on every card automatically.</div>
+        <div class="feat-title"><span data-lang="en">Profile photo auto-loaded</span><span data-lang="pt">Foto de perfil automática</span></div>
+        <div class="feat-desc"><span data-lang="en">Your MAL or AniList avatar appears on every card automatically.</span><span data-lang="pt">Seu avatar do MAL ou AniList aparece em cada card automaticamente.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">🔗</div>
-        <div class="feat-title">MAL + AniList support</div>
-        <div class="feat-desc">Connect both platforms simultaneously. Badge and logo switch automatically based on the source.</div>
+        <div class="feat-title"><span data-lang="en">MAL + AniList support</span><span data-lang="pt">Suporte MAL + AniList</span></div>
+        <div class="feat-desc"><span data-lang="en">Connect both platforms simultaneously. Badge and logo switch automatically based on the source.</span><span data-lang="pt">Conecte as duas plataformas ao mesmo tempo. O logo muda automaticamente de acordo com a fonte.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">📊</div>
-        <div class="feat-title">All statuses supported</div>
-        <div class="feat-desc">Completed ★, Watching ▶, On Hold ⏸ and Dropped ✕ — each with unique icon and color.</div>
+        <div class="feat-title"><span data-lang="en">All statuses supported</span><span data-lang="pt">Todos os status suportados</span></div>
+        <div class="feat-desc"><span data-lang="en">Completed ★, Watching ▶, On Hold ⏸ and Dropped ✕ — each with unique icon and color.</span><span data-lang="pt">Completo ★, Assistindo ▶, Em Pausa ⏸ e Abandonado ✕ — cada um com ícone e cor únicos.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">🖼️</div>
-        <div class="feat-title">Pixel-perfect export</div>
-        <div class="feat-desc">Canvas API renders exactly what you see in preview at 1080×1920px.</div>
+        <div class="feat-title"><span data-lang="en">Pixel-perfect export</span><span data-lang="pt">Export perfeito</span></div>
+        <div class="feat-desc"><span data-lang="en">Canvas API renders exactly what you see in preview at 1080×1920px.</span><span data-lang="pt">A Canvas API renderiza exatamente o que você vê na prévia em 1080×1920px.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">⚡</div>
-        <div class="feat-title">Instant detection</div>
-        <div class="feat-desc">Banner appears the moment you change a status — no need to open the extension manually.</div>
+        <div class="feat-title"><span data-lang="en">Instant detection</span><span data-lang="pt">Detecção instantânea</span></div>
+        <div class="feat-desc"><span data-lang="en">Banner appears the moment you change a status — no need to open the extension manually.</span><span data-lang="pt">O banner aparece no momento em que você muda um status — sem precisar abrir a extensão.</span></div>
       </div>
       <div class="feat">
         <div class="feat-icon">🔒</div>
-        <div class="feat-title">Private & secure</div>
-        <div class="feat-desc">MAL uses PKCE OAuth. AniList token exchange via secure proxy — client secret never exposed.</div>
+        <div class="feat-title"><span data-lang="en">Private & secure</span><span data-lang="pt">Privado e seguro</span></div>
+        <div class="feat-desc"><span data-lang="en">MAL uses PKCE OAuth. AniList token exchange via secure proxy — client secret never exposed.</span><span data-lang="pt">MAL usa PKCE OAuth. AniList troca token via proxy seguro — o client secret nunca é exposto.</span></div>
       </div>
     </div>
   </div>
@@ -342,26 +357,26 @@
 <section>
   <div class="container">
     <div class="reveal">
-      <div class="section-label">// status support</div>
-      <h2 class="section-title">NOT JUST<br/><span class="gold">COMPLETED</span></h2>
-      <p style="color:var(--muted);font-size:14px;max-width:480px;line-height:1.7;">Every status gets its own icon and color. Share where you are in any title — not just what you finished.</p>
+      <div class="section-label"><span data-lang="en">// status support</span><span data-lang="pt">// status suportados</span></div>
+      <h2 class="section-title"><span data-lang="en">NOT JUST<br/><span class="gold">COMPLETED</span></span><span data-lang="pt">NÃO SÓ<br/><span class="gold">COMPLETO</span></span></h2>
+      <p style="color:var(--muted);font-size:14px;max-width:480px;line-height:1.7;"><span data-lang="en">Every status gets its own icon and color. Share where you are in any title — not just what you finished.</span><span data-lang="pt">Cada status tem seu próprio ícone e cor. Compartilhe onde está em qualquer título — não só o que terminou.</span></p>
     </div>
     <div class="status-grid reveal">
       <div class="status-card">
         <div class="status-icon">★</div>
-        <div><div class="status-name" style="color:#facc15;">Completed</div><div class="status-desc">Star + score in metal color</div></div>
+        <div><div class="status-name" style="color:#facc15;">Completed</div><div class="status-desc"><span data-lang="en">Star + score in metal color</span><span data-lang="pt">Estrela + nota em cor metálica</span></div></div>
       </div>
       <div class="status-card">
         <div class="status-icon">▶</div>
-        <div><div class="status-name" style="color:#4ade80;">Watching / Reading</div><div class="status-desc">Progress shown (ep watched/total)</div></div>
+        <div><div class="status-name" style="color:#4ade80;">Watching / Reading</div><div class="status-desc"><span data-lang="en">Progress shown (ep watched/total)</span><span data-lang="pt">Progresso exibido (ep assistidos/total)</span></div></div>
       </div>
       <div class="status-card">
         <div class="status-icon">⏸</div>
-        <div><div class="status-name" style="color:#e2e8f0;">On Hold</div><div class="status-desc">Paused — silver tone</div></div>
+        <div><div class="status-name" style="color:#e2e8f0;">On Hold</div><div class="status-desc"><span data-lang="en">Paused — silver tone</span><span data-lang="pt">Pausado — tom prata</span></div></div>
       </div>
       <div class="status-card">
         <div class="status-icon">✕</div>
-        <div><div class="status-name" style="color:#ef4444;">Dropped</div><div class="status-desc">Bold red — no sugarcoating</div></div>
+        <div><div class="status-name" style="color:#ef4444;">Dropped</div><div class="status-desc"><span data-lang="en">Bold red — no sugarcoating</span><span data-lang="pt">Vermelho forte — sem eufemismos</span></div></div>
       </div>
     </div>
   </div>
@@ -373,8 +388,8 @@
 <section>
   <div class="container" style="text-align:center;">
     <div class="reveal">
-      <div class="section-label">// rating palette</div>
-      <h2 class="section-title">FROM <span class="al">APPALLING</span><br/>TO <span class="gold">MASTERPIECE</span></h2>
+      <div class="section-label"><span data-lang="en">// rating palette</span><span data-lang="pt">// paleta de notas</span></div>
+      <h2 class="section-title"><span data-lang="en">FROM <span class="al">APPALLING</span><br/>TO <span class="gold">MASTERPIECE</span></span><span data-lang="pt">DO <span class="al">HORRÍVEL</span><br/>AO <span class="gold">OBRA-PRIMA</span></span></h2>
     </div>
     <div class="ratings-showcase reveal">
       <div class="ratings-row">
@@ -399,30 +414,30 @@
 <section id="platforms">
   <div class="container">
     <div class="reveal">
-      <div class="section-label">// platforms</div>
-      <h2 class="section-title"><span class="gold">MAL</span> + <span class="al">ANILIST</span><br/>AT ONCE</h2>
+      <div class="section-label"><span data-lang="en">// platforms</span><span data-lang="pt">// plataformas</span></div>
+      <h2 class="section-title"><span data-lang="en"><span class="gold">MAL</span> + <span class="al">ANILIST</span><br/>AT ONCE</span><span data-lang="pt"><span class="gold">MAL</span> + <span class="al">ANILIST</span><br/>AO MESMO TEMPO</span></h2>
     </div>
     <div class="platforms-grid reveal">
       <div class="platform-card mal">
         <div class="platform-logo mal">MyAnimeList</div>
-        <div class="platform-title">Full MAL integration</div>
+        <div class="platform-title"><span data-lang="en">Full MAL integration</span><span data-lang="pt">Integração completa MAL</span></div>
         <ul class="platform-list">
-          <li>OAuth PKCE login — no password needed</li>
-          <li>Pulls title, cover, eps and your score</li>
-          <li>Detects status changes automatically</li>
-          <li>Works on anime and manga pages</li>
-          <li>Profile photo loaded automatically</li>
+          <li><span data-lang="en">OAuth PKCE login — no password needed</span><span data-lang="pt">Login OAuth PKCE — sem senha necessária</span></li>
+          <li><span data-lang="en">Pulls title, cover, eps and your score</span><span data-lang="pt">Puxa título, capa, eps e sua nota</span></li>
+          <li><span data-lang="en">Detects status changes automatically</span><span data-lang="pt">Detecta mudanças de status automaticamente</span></li>
+          <li><span data-lang="en">Works on anime and manga pages</span><span data-lang="pt">Funciona em páginas de anime e mangá</span></li>
+          <li><span data-lang="en">Profile photo loaded automatically</span><span data-lang="pt">Foto de perfil carregada automaticamente</span></li>
         </ul>
       </div>
       <div class="platform-card al">
         <div class="platform-logo al">AniList</div>
-        <div class="platform-title">Full AniList integration</div>
+        <div class="platform-title"><span data-lang="en">Full AniList integration</span><span data-lang="pt">Integração completa AniList</span></div>
         <ul class="platform-list">
-          <li>OAuth login via secure proxy server</li>
-          <li>GraphQL API — fast and precise</li>
-          <li>Score converted from 0–100 to 0–10</li>
+          <li><span data-lang="en">OAuth login via secure proxy server</span><span data-lang="pt">Login OAuth via servidor proxy seguro</span></li>
+          <li><span data-lang="en">GraphQL API — fast and precise</span><span data-lang="pt">API GraphQL — rápida e precisa</span></li>
+          <li><span data-lang="en">Score converted from 0–100 to 0–10</span><span data-lang="pt">Nota convertida de 0–100 para 0–10</span></li>
           <li>Detects status changes automatically</li>
-          <li>AniList logo shown on the story card</li>
+          <li><span data-lang="en">AniList logo shown on the story card</span><span data-lang="pt">Logo AniList exibido no card do story</span></li>
         </ul>
       </div>
     </div>
@@ -435,8 +450,8 @@
 <section id="install">
   <div class="container">
     <div class="install-box reveal">
-      <h2 class="install-title">INSTALL IN 30 SECONDS</h2>
-      <p class="install-sub">Works on Chrome, Brave and Edge.<br/>No Chrome Web Store needed — load directly in developer mode.</p>
+      <h2 class="install-title"><span data-lang="en">INSTALL IN 30 SECONDS</span><span data-lang="pt">INSTALE EM 30 SEGUNDOS</span></h2>
+      <p class="install-sub"><span data-lang="en">Works on Chrome, Brave and Edge.<br/>No Chrome Web Store needed — load directly in developer mode.</span><span data-lang="pt">Funciona no Chrome, Brave e Edge.<br/>Sem Chrome Web Store — carregue direto no modo desenvolvedor.</span></p>
       <div class="code-block">
         <div><span class="c"># 1. Download and unzip</span></div>
         <div><span class="cmd">↓</span> Download <span class="val">mal-story-extension-v3.zip</span> below</div>
@@ -447,8 +462,8 @@
         <div style="margin-top:8px;"><span class="c"># 3. Login and start generating!</span></div>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="https://github.com/Vltachi/mal-story-generator/releases/latest/download/mal-story-extension-v3.zip" class="btn-primary">⬇ Download v3.0.0</a>
-        <a href="https://github.com/Vltachi/mal-story-generator" class="btn-secondary" target="_blank">⭐ Star on GitHub</a>
+        <a href="https://github.com/Vltachi/mal-story-generator/releases/latest/download/mal-story-extension-v3.zip" class="btn-primary"><span data-lang="en">⬇ Download v3.0.0</span><span data-lang="pt">⬇ Baixar v3.0.0</span></a>
+        <a href="https://github.com/Vltachi/mal-story-generator" class="btn-secondary" target="_blank"><span data-lang="en">⭐ Star on GitHub</span><span data-lang="pt">⭐ Star no GitHub</span></a>
       </div>
     </div>
   </div>
@@ -459,7 +474,7 @@
     <div class="nav-sq">ASG</div>
     <span class="footer-txt">Anime Story Generator</span>
   </a>
-  <span class="footer-txt">Open source · Not affiliated with MyAnimeList or AniList</span>
+  <span class="footer-txt"><span data-lang="en">Open source · Not affiliated with MyAnimeList or AniList</span><span data-lang="pt">Open source · Não afiliado ao MyAnimeList ou AniList</span></span>
   <div class="footer-links">
     <a href="https://github.com/Vltachi/mal-story-generator" class="footer-link" target="_blank">GitHub</a>
     <a href="https://myanimelist.net" class="footer-link" target="_blank">MyAnimeList</a>
@@ -473,6 +488,20 @@
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.1 });
   reveals.forEach(el => obs.observe(el));
+</script>
+
+<script>
+function setLang(lang) {
+  document.body.className = 'lang-' + lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.toLowerCase() === lang);
+  });
+  localStorage.setItem('lang', lang);
+}
+(function() {
+  var saved = localStorage.getItem('lang');
+  if (saved) setLang(saved);
+})();
 </script>
 </body>
 </html>
