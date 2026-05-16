@@ -1,117 +1,120 @@
 const content = document.getElementById('content');
 
-function renderLoggedIn(profile) {
-  const name = profile?.name || 'Usuário MAL';
-  const pic  = profile?.picture || '';
+function renderAccounts(malStatus, alStatus) {
+  const malLoggedIn = malStatus?.loggedIn;
+  const alLoggedIn  = alStatus?.loggedIn;
 
-  const html = `
+  content.innerHTML = `
+    ${malLoggedIn ? `
     <div class="user-row">
-      <div class="user-avatar" id="av-wrap">
-        ${pic ? '<img id="av-img" src="" alt="" />' : '<span>' + name[0].toUpperCase() + '</span>'}
-      </div>
+      <div class="user-avatar">${malStatus.profile?.picture ? `<img src="${malStatus.profile.picture}" />` : (malStatus.profile?.name?.[0]?.toUpperCase() || 'M')}</div>
       <div>
-        <div class="user-name">${name}</div>
-        <div class="user-sub">Conectado ao MAL ✓</div>
+        <div class="user-name">${malStatus.profile?.name || 'Usuário MAL'}</div>
+        <div class="user-sub">MyAnimeList ✓</div>
       </div>
-    </div>
-    <div class="status-row">
-      <div class="dot green"></div>
-      <span id="page-st">Verificando…</span>
-    </div>
-    <button class="btn" id="btn-gen">📸 Gerar Story desta página</button>
-    <button class="btn secondary" id="btn-blank">Abrir gerador em branco</button>
+    </div>` : `
+    <button class="btn" id="btn-mal-login">🔑 Entrar com MyAnimeList</button>`}
+
+    ${alLoggedIn ? `
+    <div class="user-row" style="margin-top:8px;">
+      <div class="user-avatar" style="background:#02a9ff;">${alStatus.profile?.picture ? `<img src="${alStatus.profile.picture}" />` : (alStatus.profile?.name?.[0]?.toUpperCase() || 'A')}</div>
+      <div>
+        <div class="user-name">${alStatus.profile?.name || 'Usuário AniList'}</div>
+        <div class="user-sub">AniList ✓</div>
+      </div>
+    </div>` : `
+    <button class="btn" id="btn-al-login" style="background:#02a9ff;margin-top:8px;">🔑 Entrar com AniList</button>`}
+
     <hr class="divider" />
-    <button class="btn danger" id="btn-logout">Sair da conta MAL</button>
+
+    <div class="status-row">
+      <div class="dot ${malLoggedIn || alLoggedIn ? 'green' : 'gray'}"></div>
+      <span id="page-st">Verificando página…</span>
+    </div>
+
+    <button class="btn" id="btn-gen" ${!malLoggedIn && !alLoggedIn ? 'disabled' : ''}>📸 Gerar Story desta página</button>
+    <button class="btn secondary" id="btn-blank">Abrir gerador em branco</button>
+
+    ${malLoggedIn || alLoggedIn ? `
+    <hr class="divider" />
+    ${malLoggedIn ? `<button class="btn danger" id="btn-mal-logout">Sair do MAL</button>` : ''}
+    ${alLoggedIn  ? `<button class="btn danger" id="btn-al-logout" style="margin-top:6px;">Sair do AniList</button>` : ''}
+    ` : ''}
   `;
-  content.innerHTML = html;
 
-  if (pic) {
-    document.getElementById('av-img').src = pic;
-  }
-
-  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-    const url = tabs[0] ? tabs[0].url : '';
-    const isWork = /myanimelist\.net\/(anime|manga)\/\d+/.test(url);
-    const stEl  = document.getElementById('page-st');
-    const btnEl = document.getElementById('btn-gen');
-    if (stEl) stEl.textContent = isWork ? 'Página MAL detectada ✓' : 'Acesse um anime/manga no MAL';
-    if (!isWork && btnEl) btnEl.disabled = true;
+  // Página atual
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const url = tabs[0]?.url || '';
+    const isMal  = /myanimelist\.net\/(anime|manga)\/\d+/.test(url);
+    const isAL   = /anilist\.co\/(anime|manga)\/\d+/.test(url);
+    const st     = document.getElementById('page-st');
+    const btnGen = document.getElementById('btn-gen');
+    if (isMal)  { if(st) st.textContent = 'MyAnimeList detectado ✓'; }
+    else if (isAL) { if(st) st.textContent = 'AniList detectado ✓'; }
+    else { if(st) st.textContent = 'Acesse um anime/manga'; if(btnGen) btnGen.disabled = true; }
   });
 
-  document.getElementById('btn-gen').addEventListener('click', function() {
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      const url = tabs[0] ? tabs[0].url : '';
-      chrome.runtime.sendMessage({ action: 'fetchWorkData', url: url }, function() {
+  // Listeners
+  document.getElementById('btn-mal-login')?.addEventListener('click', () => {
+    const btn = document.getElementById('btn-mal-login');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Aguarde…'; }
+    chrome.runtime.sendMessage({ action: 'login' }, res => {
+      if (res?.ok) location.reload();
+      else { if(btn){btn.disabled=false;btn.textContent='🔑 Entrar com MyAnimeList';} alert('Erro: '+(res?.error||'tente novamente')); }
+    });
+  });
+
+  document.getElementById('btn-al-login')?.addEventListener('click', () => {
+    const btn = document.getElementById('btn-al-login');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Aguarde…'; }
+    chrome.runtime.sendMessage({ action: 'anilistLogin' }, res => {
+      if (res?.ok) location.reload();
+      else { if(btn){btn.disabled=false;btn.textContent='🔑 Entrar com AniList';} alert('Erro: '+(res?.error||'tente novamente')); }
+    });
+  });
+
+  document.getElementById('btn-gen')?.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const url = tabs[0]?.url || '';
+      const isMal = /myanimelist\.net\/(anime|manga)\/\d+/.test(url);
+      const isAL  = /anilist\.co\/(anime|manga)\/\d+/.test(url);
+      if (isMal) {
+        chrome.runtime.sendMessage({ action: 'fetchWorkData', url }, () => {
+          chrome.tabs.create({ url: chrome.runtime.getURL('generator.html') });
+          window.close();
+        });
+      } else if (isAL) {
+        const m = url.match(/\/(anime|manga)\/(\d+)/);
+        if (m) {
+          chrome.runtime.sendMessage({ action: 'fetchAniListWorkData', mediaId: parseInt(m[2]), type: m[1] }, () => {
+            chrome.tabs.create({ url: chrome.runtime.getURL('generator.html') });
+            window.close();
+          });
+        }
+      } else {
         chrome.tabs.create({ url: chrome.runtime.getURL('generator.html') });
         window.close();
-      });
+      }
     });
   });
 
-  document.getElementById('btn-blank').addEventListener('click', function() {
-    chrome.storage.local.remove('malStoryData', function() {
+  document.getElementById('btn-blank')?.addEventListener('click', () => {
+    chrome.storage.local.remove('malStoryData', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('generator.html') });
       window.close();
     });
   });
 
-  document.getElementById('btn-logout').addEventListener('click', function() {
-    chrome.storage.local.remove(
-      ['mal_access_token','mal_refresh_token','mal_expires_at','malUserProfile'],
-      function() { renderLoggedOut(); }
-    );
+  document.getElementById('btn-mal-logout')?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'logout' }, () => location.reload());
+  });
+
+  document.getElementById('btn-al-logout')?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'anilistLogout' }, () => location.reload());
   });
 }
 
-function renderLoggedOut() {
-  content.innerHTML = `
-    <div class="status-row">
-      <div class="dot gray"></div>
-      <span>Não conectado ao MyAnimeList</span>
-    </div>
-    <button class="btn" id="btn-login">🔑 Entrar com MyAnimeList</button>
-    <button class="btn secondary" id="btn-blank">Abrir gerador em branco</button>
-    <p class="hint">Faça login para preencher título,<br>capa, nota e episódios automaticamente.</p>
-  `;
-
-  document.getElementById('btn-login').addEventListener('click', function() {
-    var btn = document.getElementById('btn-login');
-    btn.disabled = true;
-    btn.textContent = '⏳ Aguarde…';
-    chrome.runtime.sendMessage({ action: 'login' }, function(res) {
-      if (chrome.runtime.lastError) {
-        btn.disabled = false;
-        btn.textContent = '🔑 Entrar com MyAnimeList';
-        alert('Erro: ' + chrome.runtime.lastError.message);
-        return;
-      }
-      if (res && res.ok) {
-        renderLoggedIn(res.profile);
-      } else {
-        btn.disabled = false;
-        btn.textContent = '🔑 Entrar com MyAnimeList';
-        alert('Erro no login: ' + (res ? res.error : 'Tente novamente.'));
-      }
-    });
-  });
-
-  document.getElementById('btn-blank').addEventListener('click', function() {
-    chrome.storage.local.remove('malStoryData', function() {
-      chrome.tabs.create({ url: chrome.runtime.getURL('generator.html') });
-      window.close();
-    });
-  });
-}
-
-// Init — lê token direto do storage sem depender do service worker
-chrome.storage.local.get(['mal_access_token','mal_expires_at','malUserProfile'], function(res) {
-  var token     = res.mal_access_token;
-  var expiresAt = res.mal_expires_at || 0;
-  var profile   = res.malUserProfile;
-  var valid     = token && Date.now() < expiresAt - 60000;
-  if (valid) {
-    renderLoggedIn(profile);
-  } else {
-    renderLoggedOut();
-  }
+// Init
+chrome.runtime.sendMessage({ action: 'getStatus' }, res => {
+  renderAccounts(res?.mal, res?.al);
 });

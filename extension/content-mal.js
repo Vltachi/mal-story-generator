@@ -20,7 +20,10 @@
     const titleEl =
       document.querySelector('h1.title-name strong') ||
       document.querySelector('h1[itemprop="name"]') ||
-      document.querySelector('h1.title-name');
+      document.querySelector('h1.title-name') ||
+      document.querySelector('[itemprop="name"]') ||
+      document.querySelector('h1') ||
+      document.querySelector('span[itemprop="name"]');
     if (!titleEl) return;
 
     const btn = document.createElement('button');
@@ -32,14 +35,26 @@
       btn.textContent = '⏳ Carregando...';
       btn.disabled = true;
 
+      let done = false;
+      // Timeout de 5s — se SW não responder, abre o gerador mesmo assim
+      const timer = setTimeout(() => {
+        if (!done) {
+          done = true;
+          btn.textContent = '📸 Gerar Story';
+          btn.disabled = false;
+          chrome.runtime.sendMessage({ action: 'openGenerator' });
+        }
+      }, 5000);
+
       chrome.runtime.sendMessage(
         { action: 'fetchWorkData', url: location.href },
         (res) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
           btn.textContent = '📸 Gerar Story';
           btn.disabled = false;
-          if (res?.ok) {
-            chrome.runtime.sendMessage({ action: 'openGenerator' });
-          } else if (res?.error === 'not_logged_in') {
+          if (res?.error === 'not_logged_in') {
             showLoginBanner();
           } else {
             chrome.runtime.sendMessage({ action: 'openGenerator' });
@@ -121,8 +136,9 @@
     `;
     document.body.appendChild(banner);
     document.getElementById('mal-story-banner-btn').addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'openGenerator' });
       banner.remove();
+      // Abre o gerador — os dados já foram salvos no storage pelo background
+      chrome.runtime.sendMessage({ action: 'openGenerator' });
     });
     document.getElementById('mal-story-banner-close').addEventListener('click', () => banner.remove());
     setTimeout(() => banner?.remove(), 12000);

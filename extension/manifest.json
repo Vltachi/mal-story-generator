@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MAL Story Generator",
-  "version": "2.0.0",
-  "description": "Gera stories para Instagram quando você completa um anime ou manga no MyAnimeList.",
+  "name": "Anime Story Generator",
+  "version": "3.0.0",
+  "description": "Generate Instagram stories when you complete anime or manga on MyAnimeList or AniList.",
   "icons": {
     "16":  "icons/icon16.png",
     "48":  "icons/icon48.png",
@@ -15,7 +15,7 @@
       "48":  "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "MAL Story Generator"
+    "default_title": "Anime Story Generator"
   },
   "background": {
     "service_worker": "background.js"
@@ -23,7 +23,13 @@
   "content_scripts": [
     {
       "matches": ["*://myanimelist.net/*"],
-      "js": ["content.js"],
+      "js": ["content-mal.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://anilist.co/*"],
+      "js": ["content-anilist.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     }
@@ -32,6 +38,13 @@
   "host_permissions": [
     "*://myanimelist.net/*",
     "*://api.myanimelist.net/*",
-    "*://myanimelist.net/v1/oauth2/token"
+    "*://anilist.co/*",
+    "*://graphql.anilist.co/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["generator.html"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
