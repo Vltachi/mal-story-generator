@@ -12,7 +12,8 @@ const MAL_API_BASE  = 'https://api.myanimelist.net/v2';
 // ════════════════════════════════
 const AL_CLIENT_ID  = '41521';
 const AL_AUTH_SERVER = 'https://mal-story-auth-server-production.up.railway.app';
-const AL_REDIRECT_URI = chrome.identity.getRedirectURL('oauth-callback');
+const AL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback?state=anilist';
+const MAL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback';
 const AL_API          = 'https://graphql.anilist.co';
 
 // ════════════════════════════════
@@ -57,37 +58,62 @@ async function malPostToken(params) {
 }
 
 async function malLogin() {
-  const verifier    = generateVerifier();
-  const redirectUri = chrome.identity.getRedirectURL('oauth-callback');
-  await chrome.storage.local.set({ pkce_verifier: verifier, pkce_redirect: redirectUri });
+  const verifier = generateVerifier();
+  await chrome.storage.local.set({ pkce_verifier: verifier, pending_login: 'mal' });
 
   const authUrl = new URL('https://myanimelist.net/v1/oauth2/authorize');
   authUrl.searchParams.set('response_type',         'code');
   authUrl.searchParams.set('client_id',             MAL_CLIENT_ID);
-  authUrl.searchParams.set('redirect_uri',          redirectUri);
+  authUrl.searchParams.set('redirect_uri',          MAL_REDIRECT_URI);
   authUrl.searchParams.set('code_challenge',        verifier);
   authUrl.searchParams.set('code_challenge_method', 'plain');
+  authUrl.searchParams.set('state',                 'mal:' + verifier);
 
   return new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow({ url: authUrl.toString(), interactive: true }, async (redirectUrl) => {
-      if (chrome.runtime.lastError || !redirectUrl) {
-        await chrome.storage.local.remove(['pkce_verifier','pkce_redirect']);
-        return reject(new Error(chrome.runtime.lastError?.message || 'Login cancelado'));
+    // Abre aba normal do browser
+    chrome.tabs.create({ url: authUrl.toString() }, (tab) => {
+      const tabId = tab.id;
+
+      // Monitora mudanças de URL na aba
+      function onUpdated(updatedTabId, changeInfo, updatedTab) {
+        if (updatedTabId !== tabId) return;
+        if (!changeInfo.url) return;
+
+        try {
+          const url = new URL(changeInfo.url);
+          // Detecta quando chega na página de callback do Railway
+          if (url.hostname.includes('railway.app') && url.pathname === '/extension-callback') {
+            const token   = url.searchParams.get('token');
+            const refresh = url.searchParams.get('refresh');
+            cleanup();
+            if (!token) return reject(new Error('Token não recebido'));
+            chrome.tabs.remove(tabId);
+            chrome.storage.local.set({
+              mal_access_token:  token,
+              mal_refresh_token: refresh || '',
+              mal_expires_at:    Date.now() + 30 * 24 * 60 * 60 * 1000,
+            }).then(() => resolve(token));
+          }
+        } catch(e) {}
       }
-      const code   = new URL(redirectUrl).searchParams.get('code');
-      const stored = await chrome.storage.local.get(['pkce_verifier','pkce_redirect']);
-      const res    = await malPostToken({
-        client_id: MAL_CLIENT_ID, grant_type: 'authorization_code',
-        code, redirect_uri: stored.pkce_redirect, code_verifier: stored.pkce_verifier,
-      });
-      await chrome.storage.local.remove(['pkce_verifier','pkce_redirect']);
-      if (!res.ok) return reject(new Error('Token error: ' + res.text));
-      const token = JSON.parse(res.text);
-      await chrome.storage.local.set({
-        mal_access_token: token.access_token, mal_refresh_token: token.refresh_token,
-        mal_expires_at: Date.now() + token.expires_in * 1000,
-      });
-      resolve(token.access_token);
+
+      function onRemoved(removedTabId) {
+        if (removedTabId !== tabId) return;
+        cleanup();
+        reject(new Error('Login cancelado'));
+      }
+
+      function cleanup() {
+        chrome.tabs.onUpdated.removeListener(onUpdated);
+        chrome.tabs.onRemoved.removeListener(onRemoved);
+        chrome.storage.local.remove(['pkce_verifier', 'pending_login']);
+      }
+
+      chrome.tabs.onUpdated.addListener(onUpdated);
+      chrome.tabs.onRemoved.addListener(onRemoved);
+
+      // Timeout de 5 minutos
+      setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 300000);
     });
   });
 }
