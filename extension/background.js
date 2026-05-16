@@ -12,8 +12,8 @@ const MAL_API_BASE  = 'https://api.myanimelist.net/v2';
 // ════════════════════════════════
 const AL_CLIENT_ID  = '41521';
 const AL_AUTH_SERVER = 'https://mal-story-auth-server-production.up.railway.app';
-const AL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback?state=anilist';
-const MAL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback';
+const AL_REDIRECT_URI  = 'https://mal-story-auth-server-production.up.railway.app/callback/anilist';
+const MAL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback/mal';
 const AL_API          = 'https://graphql.anilist.co';
 
 // ════════════════════════════════
@@ -75,35 +75,40 @@ async function malLogin() {
       const tabId = tab.id;
 
       // Monitora mudanças de URL na aba
-      function onUpdated(updatedTabId, changeInfo, updatedTab) {
-        if (updatedTabId !== tabId) return;
-        if (!changeInfo.url) return;
-
+      function checkUrlMal(url) {
         try {
-          const url = new URL(changeInfo.url);
-          // Detecta quando chega na página de callback do Railway
-          if (url.hostname.includes('railway.app') && url.pathname === '/extension-callback') {
-            const token   = url.searchParams.get('token');
-            const refresh = url.searchParams.get('refresh');
-            cleanup();
-            if (!token) return reject(new Error('Token não recebido'));
-            chrome.tabs.remove(tabId);
+          const u = new URL(url);
+          if (u.hostname.includes('railway.app') && u.pathname === '/extension-callback') {
+            const token   = u.searchParams.get('token');
+            const refresh = u.searchParams.get('refresh');
+            if (!token) return false;
+            cleanupMal();
+            chrome.tabs.remove(tabId).catch(() => {});
             chrome.storage.local.set({
               mal_access_token:  token,
               mal_refresh_token: refresh || '',
               mal_expires_at:    Date.now() + 30 * 24 * 60 * 60 * 1000,
             }).then(() => resolve(token));
+            return true;
           }
         } catch(e) {}
+        return false;
+      }
+
+      function onUpdated(updatedTabId, changeInfo, updatedTab) {
+        if (updatedTabId !== tabId) return;
+        const urlToCheck = changeInfo.url || updatedTab.url;
+        if (urlToCheck) checkUrlMal(urlToCheck);
       }
 
       function onRemoved(removedTabId) {
         if (removedTabId !== tabId) return;
-        cleanup();
+        cleanupMal();
         reject(new Error('Login cancelado'));
       }
 
-      function cleanup() {
+      function cleanupMal() {
+        clearInterval(pollMal);
         chrome.tabs.onUpdated.removeListener(onUpdated);
         chrome.tabs.onRemoved.removeListener(onRemoved);
         chrome.storage.local.remove(['pkce_verifier', 'pending_login']);
@@ -112,8 +117,14 @@ async function malLogin() {
       chrome.tabs.onUpdated.addListener(onUpdated);
       chrome.tabs.onRemoved.addListener(onRemoved);
 
-      // Timeout de 5 minutos
-      setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 300000);
+      const pollMal = setInterval(() => {
+        chrome.tabs.get(tabId, (tab) => {
+          if (chrome.runtime.lastError) { clearInterval(pollMal); return; }
+          if (tab && tab.url) checkUrlMal(tab.url);
+        });
+      }, 500);
+
+      setTimeout(() => { cleanupMal(); reject(new Error('Timeout')); }, 300000);
     });
   });
 }
@@ -188,63 +199,62 @@ async function buildMalStoryData(data, type) {
 // ANILIST — helpers
 // ════════════════════════════════
 async function anilistLogin() {
-  // AniList authorization_code flow
-  const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${AL_CLIENT_ID}&redirect_uri=${encodeURIComponent(AL_REDIRECT_URI)}&response_type=code`;
+  // Pin flow via chrome.tabs — abre a página do AniList normalmente
+  // A extensão monitora a URL da aba até encontrar o token no hash
+  const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${AL_CLIENT_ID}&response_type=token`;
 
   return new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, async (redirectUrl) => {
-      if (chrome.runtime.lastError || !redirectUrl) {
-        return reject(new Error(chrome.runtime.lastError?.message || 'Login cancelado'));
+    chrome.tabs.create({ url: authUrl }, (tab) => {
+      const tabId = tab.id;
+
+      function checkUrl(url) {
+        if (!url || !url.includes('anilist.co/api/v2/oauth/pin')) return false;
+        try {
+          const u = new URL(url);
+          const hash = u.hash.slice(1);
+          const params = new URLSearchParams(hash);
+          const token = params.get('access_token');
+          if (!token) return false;
+          cleanup();
+          chrome.tabs.remove(tabId).catch(() => {});
+          chrome.storage.local.set({
+            al_access_token: token,
+            al_expires_at:   Date.now() + 365 * 24 * 60 * 60 * 1000,
+          }).then(() => resolve(token));
+          return true;
+        } catch(e) { return false; }
       }
 
-      // Tenta pegar code da query string
-      let code;
-      try {
-        const url = new URL(redirectUrl);
-        code = url.searchParams.get('code');
-        // Fallback: tenta no hash
-        if (!code && url.hash) {
-          const hashParams = new URLSearchParams(url.hash.slice(1));
-          code = hashParams.get('code');
-          // Fallback2: token direto no hash (implicit)
-          const accessToken = hashParams.get('access_token');
-          if (!code && accessToken) {
-            const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
-            await chrome.storage.local.set({
-              al_access_token: accessToken,
-              al_expires_at:   Date.now() + expiresIn * 1000,
-            });
-            return resolve(accessToken);
-          }
-        }
-      } catch(e) {
-        return reject(new Error('URL inválida: ' + redirectUrl));
+      function onUpdated(updatedTabId, changeInfo, tab) {
+        if (updatedTabId !== tabId) return;
+        const url = changeInfo.url || tab.url;
+        if (url) checkUrl(url);
       }
 
-      if (!code) return reject(new Error('Código não recebido. URL: ' + redirectUrl));
+      function onRemoved(removedTabId) {
+        if (removedTabId !== tabId) return;
+        cleanup();
+        reject(new Error('Login cancelado'));
+      }
 
-      // Troca code por token via servidor intermediário (secret nunca exposto)
-      const res = await fetch(`${AL_AUTH_SERVER}/anilist/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          redirect_uri: AL_REDIRECT_URI,
-        }),
-      });
+      function cleanup() {
+        clearInterval(poll);
+        chrome.tabs.onUpdated.removeListener(onUpdated);
+        chrome.tabs.onRemoved.removeListener(onRemoved);
+      }
 
-      const text = await res.text();
-      console.log('[AL] token status:', res.status, text.slice(0, 200));
+      chrome.tabs.onUpdated.addListener(onUpdated);
+      chrome.tabs.onRemoved.addListener(onRemoved);
 
-      if (!res.ok) return reject(new Error('Token error: ' + text));
+      // Polling a cada 500ms
+      const poll = setInterval(() => {
+        chrome.tabs.get(tabId, (t) => {
+          if (chrome.runtime.lastError) { clearInterval(poll); return; }
+          if (t && t.url) checkUrl(t.url);
+        });
+      }, 500);
 
-      const token = JSON.parse(text);
-      await chrome.storage.local.set({
-        al_access_token:  token.access_token,
-        al_refresh_token: token.refresh_token || '',
-        al_expires_at:    Date.now() + (token.expires_in || 3600) * 1000,
-      });
-      resolve(token.access_token);
+      setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 300000);
     });
   });
 }
@@ -447,4 +457,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+});
+
+// Recebe token do Railway via chrome.runtime.onMessageExternal
+chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
+  if (msg.action === 'oauthToken') {
+    const { source, token, refresh } = msg;
+    if (source === 'anilist' && token) {
+      chrome.storage.local.set({
+        al_access_token: token,
+        al_expires_at:   Date.now() + 365 * 24 * 60 * 60 * 1000,
+      });
+    } else if (source === 'mal' && token) {
+      chrome.storage.local.set({
+        mal_access_token:  token,
+        mal_refresh_token: refresh || '',
+        mal_expires_at:    Date.now() + 30 * 24 * 60 * 60 * 1000,
+      });
+    }
+    sendResponse({ ok: true });
+  }
 });

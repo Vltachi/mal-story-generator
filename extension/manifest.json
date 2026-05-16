@@ -72,5 +72,10 @@
         "<all_urls>"
       ]
     }
-  ]
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://mal-story-auth-server-production.up.railway.app/*"
+    ]
+  }
 }
