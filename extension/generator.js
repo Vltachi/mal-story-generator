@@ -129,6 +129,17 @@ document.getElementById('inp-title').addEventListener('input', e=>{state.title=e
 document.getElementById('inp-eps').addEventListener('input',   e=>{state.eps=e.target.value;render();});
 document.getElementById('inp-score').addEventListener('input', e=>{updateScore(e.target.value);});
 
+// File inputs — listeners no JS para respeitar CSP do MV3
+document.getElementById('inp-cover').addEventListener('change', function(){ loadImgFile(this,'cover'); });
+document.getElementById('inp-avatar').addEventListener('change', function(){ loadImgFile(this,'avatar'); });
+
+
+// Botão OK da URL da capa
+document.getElementById('btn-load-cover').addEventListener('click', () => {
+  const url = document.getElementById('inp-cover-url').value.trim();
+  if (url) loadImgUrl(url, 'cover');
+});
+
 // ── Canvas ──
 function drawRR(ctx,x,y,w,h,r){
   ctx.beginPath();
