@@ -8,14 +8,32 @@
 <body>
 
 <div class="logo">
-  <div class="logo-sq">MAL</div>
+  <div class="logo-sq">ASG</div>
   <div>
     <div class="logo-text">Story Generator</div>
-    <div class="logo-sub">MyAnimeList × Instagram</div>
+    <div class="logo-sub">MyAnimeList × AniList × Instagram</div>
   </div>
 </div>
 
 <div id="content"></div>
+
+<div class="donate-bar">
+  <span class="donate-text">☕ Gostou? Apoie o projeto</span>
+  <div class="donate-btns">
+    <button class="donate-btn pix" id="btn-pix">Pix</button>
+    <button class="donate-btn kofi" id="btn-kofi">Ko-fi</button>
+  </div>
+</div>
+
+<!-- Modal Pix -->
+<div class="pix-modal" id="pix-modal">
+  <div class="pix-modal-box">
+    <button class="pix-close" id="pix-close">✕</button>
+    <p class="pix-title">Pix</p>
+    <img class="pix-qr" src="pix_qr.png" alt="QR Code Pix" />
+
+  </div>
+</div>
 
 <script src="popup.js"></script>
 </body>

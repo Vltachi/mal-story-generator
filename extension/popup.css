@@ -48,3 +48,41 @@ body {
 }
 .btn.danger:hover { background: rgba(200,40,40,0.22); }
 .hint { font-size: 10px; color: rgba(255,255,255,0.25); text-align: center; line-height: 1.55; margin-top: 6px; }
+
+/* Donate bar */
+.donate-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.donate-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+.donate-btns { display: flex; gap: 5px; }
+.donate-btn {
+  font-size: 10px; font-weight: 700; padding: 4px 10px;
+  border: none; border-radius: 20px; cursor: pointer;
+}
+.donate-btn.pix { background: #32bcad; color: #fff; }
+.donate-btn.pix:hover { background: #29a99b; }
+.donate-btn.kofi { background: #ff5e5b; color: #fff; }
+.donate-btn.kofi:hover { background: #e54e4b; }
+
+/* Modal Pix */
+.pix-modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 999;
+  align-items: center; justify-content: center;
+}
+.pix-modal.open { display: flex; }
+.pix-modal-box {
+  background: #1a1d27; border-radius: 14px;
+  padding: 16px; text-align: center; position: relative;
+  width: 200px;
+}
+.pix-close {
+  position: absolute; top: 8px; right: 10px;
+  background: none; border: none; color: rgba(255,255,255,0.4);
+  font-size: 14px; cursor: pointer;
+}
+.pix-close:hover { color: #fff; }
+.pix-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.pix-qr { width: 160px; height: 160px; border-radius: 8px; }

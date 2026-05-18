@@ -118,3 +118,17 @@ function renderAccounts(malStatus, alStatus) {
 chrome.runtime.sendMessage({ action: 'getStatus' }, res => {
   renderAccounts(res?.mal, res?.al);
 });
+
+// Donate
+document.getElementById('btn-pix').addEventListener('click', () => {
+  document.getElementById('pix-modal').classList.add('open');
+});
+document.getElementById('pix-close').addEventListener('click', () => {
+  document.getElementById('pix-modal').classList.remove('open');
+});
+document.getElementById('pix-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+document.getElementById('btn-kofi').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://ko-fi.com/vitachi' });
+});
