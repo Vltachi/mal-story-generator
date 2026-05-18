@@ -158,6 +158,15 @@ function wrapText(ctx,text,x,y,maxW,lh){
   }
   ctx.fillText(line,x,ly);
 }
+function countLines(ctx,text,maxW){
+  const words=text.split(' '); let line='',count=1;
+  for(let i=0;i<words.length;i++){
+    const test=line+(line?' ':'')+words[i];
+    if(ctx.measureText(test).width>maxW&&line){count++;line=words[i];}
+    else line=test;
+  }
+  return count;
+}
 
 function drawCard(canvas) {
   const W=canvas.width, H=canvas.height, sc=W/270;
@@ -209,14 +218,28 @@ function drawCard(canvas) {
   ar.addColorStop(0,'rgba(255,255,255,0.35)'); ar.addColorStop(1,'rgba(0,0,0,0.5)');
   ctx.strokeStyle=ar; ctx.lineWidth=2.5*sc; ctx.stroke(); ctx.restore();
 
-  // título
+  // título — fonte diminui até caber em 2 linhas
   ctx.save(); ctx.textAlign='center'; ctx.textBaseline='top';
   ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=10*sc;
-  ctx.font=`700 ${17*sc}px Montserrat, sans-serif`;
-  wrapText(ctx,state.title||'—',W/2,358*sc,230*sc,22*sc); ctx.restore();
+  const titleMaxW = 230*sc;
+  const titleLH_base = 22*sc;
+  let fontSize = 17;
+  let titleLH = titleLH_base;
+  let nLines = 999;
+  while (fontSize >= 11 && nLines > 2) {
+    titleLH = fontSize * sc * 1.3;
+    ctx.font = `700 ${fontSize*sc}px Montserrat, sans-serif`;
+    nLines = countLines(ctx, state.title||'—', titleMaxW);
+    if (nLines <= 2) break;
+    fontSize -= 1;
+  }
+  const titleStartY = 358*sc;
+  wrapText(ctx, state.title||'—', W/2, titleStartY, titleMaxW, titleLH); ctx.restore();
 
-  // nota + eps — layout varia por status
-  const mY=403*sc, sC=statusColor(state.status, state.score);
+  // nota + eps — posição dinâmica baseada no título
+  const titleEndY = titleStartY + (nLines - 1) * titleLH;
+  const mY = titleEndY + 32*sc;
+  const sC=statusColor(state.status, state.score);
   const isCompleted = state.status === 'completed' || (!state.status);
 
   ctx.save(); ctx.textBaseline='middle';
@@ -273,7 +296,7 @@ function drawCard(canvas) {
   ctx.restore();
 
   // MAL badge
-  const malY=H-38*sc;
+  const malY = H - 38*sc;
   ctx.save(); ctx.textBaseline='middle';
   ctx.shadowColor='rgba(0,0,0,0.7)'; ctx.shadowBlur=4*sc;
   const ls=18*sc, wTxt=state.source==='anilist'?'AniList':'MyAnimeList';
