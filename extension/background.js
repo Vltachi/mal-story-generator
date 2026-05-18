@@ -478,3 +478,25 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
     sendResponse({ ok: true });
   }
 });
+
+// ── Checagem de atualização ──
+const CURRENT_VERSION = '3.0.0';
+const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 1x por dia
+
+async function checkForUpdate() {
+  try {
+    const res = await fetch('https://api.github.com/repos/Vltachi/mal-story-generator/releases/latest');
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = data.tag_name?.replace(/^v/, '');
+    if (latest && latest !== CURRENT_VERSION) {
+      chrome.storage.local.set({ updateAvailable: latest });
+    } else {
+      chrome.storage.local.remove('updateAvailable');
+    }
+  } catch (e) {}
+}
+
+// Checa ao iniciar e depois a cada 24h
+checkForUpdate();
+setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL);

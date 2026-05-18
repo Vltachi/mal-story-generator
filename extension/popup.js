@@ -119,6 +119,19 @@ chrome.runtime.sendMessage({ action: 'getStatus' }, res => {
   renderAccounts(res?.mal, res?.al);
 });
 
+// Checar update disponível
+chrome.storage.local.get('updateAvailable', data => {
+  if (data.updateAvailable) {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;';
+    bar.innerHTML = `
+      <span style="font-size:11px;color:rgba(255,255,255,0.7);">🆕 v${data.updateAvailable} disponível!</span>
+      <a href="https://github.com/Vltachi/mal-story-generator/releases/latest" target="_blank" style="font-size:11px;font-weight:700;color:#facc15;text-decoration:none;white-space:nowrap;">Ver →</a>
+    `;
+    document.body.insertBefore(bar, document.getElementById('content'));
+  }
+});
+
 // Donate
 document.getElementById('btn-pix').addEventListener('click', () => {
   document.getElementById('pix-modal').classList.add('open');
