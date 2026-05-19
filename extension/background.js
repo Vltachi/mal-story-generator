@@ -383,13 +383,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   // ── AniList login ──
   if (msg.action === 'anilistLogin') {
-    anilistLogin()
-      .then(token => fetchAniListUserProfile(token))
-      .then(profile => {
-        chrome.storage.local.set({ alUserProfile: profile });
+    (async () => {
+      try {
+        const token = await anilistLogin();
+        if (!token) throw new Error('Token vazio');
+        const profile = await fetchAniListUserProfile(token);
+        await chrome.storage.local.set({ alUserProfile: profile });
         sendResponse({ ok: true, profile, source: 'anilist' });
-      })
-      .catch(err => sendResponse({ ok: false, error: err.message }));
+      } catch(err) {
+        console.error('AniList login error:', err);
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
     return true;
   }
 

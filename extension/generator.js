@@ -218,13 +218,13 @@ function drawCard(canvas) {
   ar.addColorStop(0,'rgba(255,255,255,0.35)'); ar.addColorStop(1,'rgba(0,0,0,0.5)');
   ctx.strokeStyle=ar; ctx.lineWidth=2.5*sc; ctx.stroke(); ctx.restore();
 
-  // título — fonte diminui até caber em 2 linhas
+  // título — fonte diminui até caber em 2 linhas, nota sempre na mesma posição
   ctx.save(); ctx.textAlign='center'; ctx.textBaseline='top';
   ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=10*sc;
   const titleMaxW = 230*sc;
-  const titleLH_base = 22*sc;
+  const mY_fixed = 403*sc; // nota sempre aqui
   let fontSize = 17;
-  let titleLH = titleLH_base;
+  let titleLH = fontSize * sc * 1.3;
   let nLines = 999;
   while (fontSize >= 11 && nLines > 2) {
     titleLH = fontSize * sc * 1.3;
@@ -233,12 +233,16 @@ function drawCard(canvas) {
     if (nLines <= 2) break;
     fontSize -= 1;
   }
-  const titleStartY = 358*sc;
+  // título sempre na mesma posição — cresce para cima se 2 linhas
+  const titleCenterY = 358*sc + titleLH/2;
+  const titleStartY = titleCenterY - (nLines * titleLH)/2;
   wrapText(ctx, state.title||'—', W/2, titleStartY, titleMaxW, titleLH); ctx.restore();
 
-  // nota + eps — posição dinâmica baseada no título
-  const titleEndY = titleStartY + (nLines - 1) * titleLH;
-  const mY = titleEndY + 32*sc;
+  // nota + eps — fixo para 1 linha, centralizado entre título e logo para 2 linhas
+  const titleEndY = titleStartY + nLines * titleLH;
+  const malYPos = H - 38*sc;
+  const mY = nLines === 1 ? mY_fixed : titleEndY + (malYPos - titleEndY) / 2 - 5*sc;
+
   const sC=statusColor(state.status, state.score);
   const isCompleted = state.status === 'completed' || (!state.status);
 

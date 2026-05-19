@@ -27,10 +27,12 @@
     btn.title = 'Gerar story para Instagram';
 
     btn.addEventListener('click', () => {
+      const currentInfo = getPageInfo();
+      if (!currentInfo) return;
       btn.textContent = '⏳ Carregando...';
       btn.disabled = true;
       chrome.runtime.sendMessage(
-        { action: 'fetchAniListWorkData', mediaId: info.id, type: info.type },
+        { action: 'fetchAniListWorkData', mediaId: currentInfo.id, type: currentInfo.type },
         (res) => {
           btn.textContent = '📸 Gerar Story';
           btn.disabled = false;
@@ -39,7 +41,7 @@
           } else if (res?.error === 'not_logged_in') {
             showLoginBanner();
           } else {
-            chrome.runtime.sendMessage({ action: 'openGenerator' });
+            showLoginBanner();
           }
         }
       );
