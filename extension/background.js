@@ -319,10 +319,18 @@ async function buildAniListStoryData(data, type) {
   let episodes = '';
   if (type === 'anime') {
     const total = data.episodes || 0;
-    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} eps` : total > 0 ? `${total} ep.` : '';
+    if (mappedStatus === 'watching' && progress > 0) {
+      episodes = total > 0 ? `ep. ${progress}/${total}` : `ep. ${progress}/?`;
+    } else if (mappedStatus === 'completed') {
+      episodes = total > 0 ? `${total} ep.` : progress > 0 ? `${progress} ep.` : '';
+    }
   } else {
     const total = data.chapters || 0;
-    episodes = (mappedStatus === 'watching' && progress > 0 && total > 0) ? `${progress}/${total} caps` : total > 0 ? `${total} ch.` : '';
+    if (mappedStatus === 'watching' && progress > 0) {
+      episodes = total > 0 ? `ch. ${progress}/${total}` : `ch. ${progress}/?`;
+    } else if (mappedStatus === 'completed') {
+      episodes = total > 0 ? `${total} ch.` : progress > 0 ? `${progress} ch.` : '';
+    }
   }
 
   const stored    = await chrome.storage.local.get('alUserProfile');
@@ -383,18 +391,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   // ── AniList login ──
   if (msg.action === 'anilistLogin') {
-    (async () => {
-      try {
-        const token = await anilistLogin();
-        if (!token) throw new Error('Token vazio');
-        const profile = await fetchAniListUserProfile(token);
-        await chrome.storage.local.set({ alUserProfile: profile });
+    anilistLogin()
+      .then(token => fetchAniListUserProfile(token))
+      .then(profile => {
+        chrome.storage.local.set({ alUserProfile: profile });
         sendResponse({ ok: true, profile, source: 'anilist' });
-      } catch(err) {
-        console.error('AniList login error:', err);
-        sendResponse({ ok: false, error: err.message });
-      }
-    })();
+      })
+      .catch(err => sendResponse({ ok: false, error: err.message }));
     return true;
   }
 
