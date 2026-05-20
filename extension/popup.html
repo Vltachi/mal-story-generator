@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>MAL Story Generator</title>
+<title>Anime Story Generator</title>
 <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
@@ -13,12 +13,13 @@
     <div class="logo-text">Story Generator</div>
     <div class="logo-sub">MyAnimeList × AniList × Instagram</div>
   </div>
+  <button id="btn-lang" title="Toggle language" style="margin-left:auto;background:rgba(255,255,255,0.1);border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;color:#fff;padding:3px 7px;align-self:flex-start;">EN</button>
 </div>
 
 <div id="content"></div>
 
 <div class="donate-bar">
-  <span class="donate-text">☕ Gostou? Apoie o projeto</span>
+  <span class="donate-text">☕ Like it? Support the project</span>
   <div class="donate-btns">
     <button class="donate-btn pix" id="btn-pix">Pix</button>
     <button class="donate-btn kofi" id="btn-kofi">Ko-fi</button>
@@ -31,7 +32,6 @@
     <button class="pix-close" id="pix-close">✕</button>
     <p class="pix-title">Pix</p>
     <img class="pix-qr" src="pix_qr.png" alt="QR Code Pix" />
-
   </div>
 </div>
 
