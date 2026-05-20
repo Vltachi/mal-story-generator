@@ -11,9 +11,9 @@ const MAL_API_BASE  = 'https://api.myanimelist.net/v2';
 // ANILIST
 // ════════════════════════════════
 const AL_CLIENT_ID  = '41521';
-const AL_AUTH_SERVER = 'https://mal-story-auth-server-production.up.railway.app';
-const AL_REDIRECT_URI  = 'https://mal-story-auth-server-production.up.railway.app/callback/anilist';
-const MAL_REDIRECT_URI = 'https://mal-story-auth-server-production.up.railway.app/callback/mal';
+const AL_AUTH_SERVER = 'https://mal-story-auth-server.onrender.com';
+const AL_REDIRECT_URI  = 'https://mal-story-auth-server.onrender.com/callback/anilist';
+const MAL_REDIRECT_URI = 'https://mal-story-auth-server.onrender.com/callback/mal';
 const AL_API          = 'https://graphql.anilist.co';
 
 // ════════════════════════════════
@@ -78,7 +78,7 @@ async function malLogin() {
       function checkUrlMal(url) {
         try {
           const u = new URL(url);
-          if (u.hostname.includes('railway.app') && u.pathname === '/extension-callback') {
+          if (u.hostname.includes('onrender.com') && u.pathname === '/extension-callback') {
             const token   = u.searchParams.get('token');
             const refresh = u.searchParams.get('refresh');
             if (!token) return false;

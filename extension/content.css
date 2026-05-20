@@ -1,9 +1,7 @@
 /* ── MAL Story Generator — content.css v2 ── */
 
-#mal-story-btn,
-#al-story-btn {
+#mal-story-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  width: fit-content;
   margin-left: 12px; margin-top: 6px;
   padding: 6px 14px; background: #2e51a2; color: #fff;
   font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -14,9 +12,9 @@
   transition: background 0.2s, transform 0.1s;
   z-index: 9999;
 }
-#mal-story-btn:hover, #al-story-btn:hover  { background: #3a65c8; transform: translateY(-1px); }
-#mal-story-btn:active, #al-story-btn:active { transform: translateY(0); }
-#mal-story-btn:disabled, #al-story-btn:disabled { opacity: 0.6; cursor: wait; }
+#mal-story-btn:hover  { background: #3a65c8; transform: translateY(-1px); }
+#mal-story-btn:active { transform: translateY(0); }
+#mal-story-btn:disabled { opacity: 0.6; cursor: wait; }
 
 /* Banner completado */
 #mal-story-banner,
@@ -48,3 +46,21 @@
   font-size: 16px; cursor: pointer; padding: 4px; line-height: 1;
 }
 #mal-story-banner-close:hover, #mal-story-login-close:hover { color: #fff; }
+
+/* AniList button */
+#al-story-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  width: fit-content;
+  margin-left: 12px; margin-top: 6px;
+  padding: 6px 14px; background: #02a9ff; color: #fff;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px; font-weight: 700;
+  border: none; border-radius: 20px; cursor: pointer;
+  vertical-align: middle;
+  box-shadow: 0 2px 8px rgba(2,169,255,0.4);
+  transition: background 0.2s, transform 0.1s;
+  z-index: 9999;
+}
+#al-story-btn:hover  { background: #00c4ff; transform: translateY(-1px); }
+#al-story-btn:active { transform: translateY(0); }
+#al-story-btn:disabled { opacity: 0.6; cursor: wait; }

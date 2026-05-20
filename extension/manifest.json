@@ -61,7 +61,7 @@
     "*://s1.anilist.co/*",
     "*://cdn.anilist.co/*",
     "*://img.anilist.co/*",
-    "*://mal-story-auth-server-production.up.railway.app/*",
+    "*://mal-story-auth-server.onrender.com/*",
     "*://api.github.com/*"
   ],
   "web_accessible_resources": [
@@ -77,7 +77,7 @@
   ],
   "externally_connectable": {
     "matches": [
-      "https://mal-story-auth-server-production.up.railway.app/*"
+      "https://mal-story-auth-server.onrender.com/*"
     ]
   }
 }

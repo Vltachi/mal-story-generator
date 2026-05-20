@@ -218,11 +218,11 @@ function drawCard(canvas) {
   ar.addColorStop(0,'rgba(255,255,255,0.35)'); ar.addColorStop(1,'rgba(0,0,0,0.5)');
   ctx.strokeStyle=ar; ctx.lineWidth=2.5*sc; ctx.stroke(); ctx.restore();
 
-  // título — fonte diminui até caber em 2 linhas, nota sempre na mesma posição
+  // título — fonte diminui até caber em 2 linhas, nota sempre fixa
   ctx.save(); ctx.textAlign='center'; ctx.textBaseline='top';
   ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.95)'; ctx.shadowBlur=10*sc;
   const titleMaxW = 230*sc;
-  const mY_fixed = 403*sc; // nota sempre aqui
+  const mY_fixed = 403*sc;
   let fontSize = 17;
   let titleLH = fontSize * sc * 1.3;
   let nLines = 999;
@@ -242,7 +242,6 @@ function drawCard(canvas) {
   const titleEndY = titleStartY + nLines * titleLH;
   const malYPos = H - 38*sc;
   const mY = nLines === 1 ? mY_fixed : titleEndY + (malYPos - titleEndY) / 2 - 5*sc;
-
   const sC=statusColor(state.status, state.score);
   const isCompleted = state.status === 'completed' || (!state.status);
 
@@ -409,9 +408,4 @@ render();
 document.addEventListener('DOMContentLoaded', function() {
   var btnDl = document.getElementById('btn-dl');
   if (btnDl) btnDl.addEventListener('click', download);
-
-  var btnLoadCover = document.getElementById('btn-load-cover');
-  if (btnLoadCover) btnLoadCover.addEventListener('click', function() {
-    loadImgUrl(document.getElementById('inp-cover-url').value, 'cover');
-  });
 });

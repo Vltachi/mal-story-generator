@@ -18,6 +18,7 @@ const LANG = {
     updateAvail: '🆕 v{v} available!',
     updateSee: 'See →',
     pixTitle: 'Pix',
+    braveTip: '⚠️ Using Brave? If you see a reCAPTCHA error, just click OK and then Allow again.',
   },
   pt: {
     malUser: 'Usuário MAL', alUser: 'Usuário AniList',
@@ -37,6 +38,7 @@ const LANG = {
     updateAvail: '🆕 v{v} disponível!',
     updateSee: 'Ver →',
     pixTitle: 'Pix',
+    braveTip: '⚠️ Usando Brave? Se aparecer erro de reCAPTCHA, clique em OK e depois em Permitir novamente.',
   }
 };
 
@@ -67,7 +69,8 @@ function renderAccounts(malStatus, alStatus) {
         <div class="user-sub">MyAnimeList ✓</div>
       </div>
     </div>` : `
-    <button class="btn" id="btn-mal-login">${t().loginMal}</button>`}
+    <button class="btn" id="btn-mal-login">${t().loginMal}</button>
+    <p style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:-4px;margin-bottom:8px;line-height:1.5;">${t().braveTip}</p>`}
 
     ${alLoggedIn ? `
     <div class="user-row" style="margin-top:8px;">
@@ -112,7 +115,9 @@ function renderAccounts(malStatus, alStatus) {
   document.getElementById('btn-mal-login')?.addEventListener('click', () => {
     const btn = document.getElementById('btn-mal-login');
     if (btn) { btn.disabled = true; btn.textContent = t().waiting; }
+
     chrome.runtime.sendMessage({ action: 'login' }, res => {
+      document.getElementById('brave-tip')?.remove();
       if (res?.ok) location.reload();
       else { if(btn){btn.disabled=false;btn.textContent=t().loginMal;} alert(t().error+(res?.error||'try again')); }
     });

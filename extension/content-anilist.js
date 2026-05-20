@@ -41,7 +41,7 @@
           } else if (res?.error === 'not_logged_in') {
             showLoginBanner();
           } else {
-            showLoginBanner();
+            chrome.runtime.sendMessage({ action: 'openGenerator' });
           }
         }
       );
