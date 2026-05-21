@@ -60,7 +60,7 @@ function statusIcon(status) {
   if (status === 'dropped')              return '✕';
   if (status === 'on_hold')              return '⏸';
   if (status === 'watching' || status === 'reading') return '▶';
-  if (status === 'plan_to_watch')        return '📋';
+  if (status === 'plan_to_watch' || status === 'plan_to_read') return '📋';
   return '★'; // completed
 }
 
@@ -68,6 +68,7 @@ function statusColor(status, score) {
   if (status === 'dropped')                          return '#ef4444';
   if (status === 'on_hold')                          return '#e2e8f0';
   if (status === 'watching' || status === 'reading') return '#4ade80';
+  if (status === 'plan_to_watch' || status === 'plan_to_read') return 'rgba(255,255,255,0.5)';
   return scoreColor(score);
 }
 
@@ -243,7 +244,9 @@ function drawCard(canvas) {
   const malYPos = H - 38*sc;
   const mY = nLines === 1 ? mY_fixed : titleEndY + (malYPos - titleEndY) / 2 - 5*sc;
   const sC=statusColor(state.status, state.score);
-  const isCompleted = state.status === 'completed' || (!state.status);
+  const isPlan = state.status === 'plan_to_watch' || state.status === 'plan_to_read';
+  const isCompleted = !isPlan && (state.status === 'completed' || (!state.status));
+  if (isPlan) state.score = '';
 
   ctx.save(); ctx.textBaseline='middle';
   ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=6*sc;
@@ -271,8 +274,8 @@ function drawCard(canvas) {
     }
   } else {
     // ✕ Dropped · 6 | 5 eps   ou   ▶ Watching | 12/24 eps
-    const statusLabels = { watching:'Watching', reading:'Reading', on_hold:'On Hold', dropped:'Dropped' };
-    const label  = statusLabels[state.status] || state.status;
+    const statusLabels = { watching:'Watching', reading:'Reading', on_hold:'On Hold', dropped:'Dropped', plan_to_watch:'Plan to Watch', plan_to_read:'Plan to Read' };
+    const label  = statusLabels[state.status] || state.status?.replace(/_/g, ' ') || '';
     const labelW = mTxt(ctx, label, `500 ${13*sc}px Montserrat, sans-serif`);
     const dotTxt = state.score > 0 ? ` · ${state.score}` : '';
     const dotW   = dotTxt ? mTxt(ctx, dotTxt, `400 ${12*sc}px Montserrat, sans-serif`) : 0;

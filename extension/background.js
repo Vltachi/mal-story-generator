@@ -171,7 +171,7 @@ async function buildMalStoryData(data, type) {
   } else {
     const total  = data.num_chapters || 0;
     const read   = data.my_list_status?.num_chapters_read || 0;
-    if (isCompleted)                            episodes = total > 0 ? `${total} ch.` : '';
+    if (isCompleted)                            episodes = total > 0 ? `${total} ch.` : read > 0 ? `${read} ch.` : '';
     else if (isActive && read > 0)              episodes = total > 0 ? `ch. ${read}/${total}` : `ch. ${read}/?`;
     else if ((isHold || isDropped) && read > 0) episodes = total > 0 ? `ch. ${read}/${total}` : `ch. ${read}/?`;
     else if (total > 0)                         episodes = `${total} ch.`;
@@ -313,8 +313,8 @@ async function buildAniListStoryData(data, type) {
   const progress = entry?.progress || 0;
 
   // Mapeia status AniList → padrão interno
-  const statusMap = { completed: 'completed', current: 'watching', paused: 'on_hold', dropped: 'dropped', planning: 'plan_to_watch' };
-  const mappedStatus = statusMap[status] || 'completed';
+  const statusMap = { completed: 'completed', current: type === 'manga' ? 'reading' : 'watching', paused: 'on_hold', dropped: 'dropped', planning: type === 'manga' ? 'plan_to_read' : 'plan_to_watch' };
+  const mappedStatus = status ? (statusMap[status] || 'completed') : '';
 
   let episodes = '';
   if (type === 'anime') {
@@ -326,7 +326,7 @@ async function buildAniListStoryData(data, type) {
     }
   } else {
     const total = data.chapters || 0;
-    if (mappedStatus === 'watching' && progress > 0) {
+    if ((mappedStatus === 'watching' || mappedStatus === 'reading') && progress > 0) {
       episodes = total > 0 ? `ch. ${progress}/${total}` : `ch. ${progress}/?`;
     } else if (mappedStatus === 'completed') {
       episodes = total > 0 ? `${total} ch.` : progress > 0 ? `${progress} ch.` : '';
