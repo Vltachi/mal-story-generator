@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Anime Story Generator",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Generate Instagram stories when you complete anime or manga on MyAnimeList or AniList.",
   "icons": {
     "16": "icons/icon16.png",

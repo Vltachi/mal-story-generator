@@ -488,7 +488,7 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
 });
 
 // ── Checagem de atualização ──
-const CURRENT_VERSION = '3.0.0';
+const CURRENT_VERSION = '3.1.0';
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 1x por dia
 
 async function checkForUpdate() {
